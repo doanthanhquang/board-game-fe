@@ -1,5 +1,12 @@
 @import 'tailwindcss';
 
+/* Smooth theme transitions */
+* {
+  transition:
+    background-color 0.2s ease-in-out,
+    color 0.2s ease-in-out;
+}
+
 body {
   margin: 0;
   font-family:

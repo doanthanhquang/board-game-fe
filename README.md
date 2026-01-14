@@ -1,4 +1,96 @@
-# React + TypeScript + Vite
+# Board Game Frontend
+
+React + TypeScript + Vite application with Material-UI and Tailwind CSS.
+
+## Features
+
+- **Dark Mode Support**: Toggle between light and dark themes
+- **Theme Persistence**: Your theme preference is saved and restored across sessions
+- **System Preference Detection**: Automatically respects your OS theme preference
+- **Material-UI Components**: Full MUI component library integration
+- **Tailwind CSS**: Utility-first CSS framework with dark mode support
+
+## Theme Management
+
+### Using the Theme Toggle
+
+The application includes a theme toggle button in the app bar that allows you to switch between light and dark modes. Your preference is automatically saved to localStorage and will be restored on your next visit.
+
+### Using Theme in Custom Components
+
+#### Material-UI Components
+
+MUI components automatically adapt to the current theme. You can access the theme in your components:
+
+```tsx
+import { useTheme as useMuiTheme } from '@mui/material/styles';
+
+function MyComponent() {
+  const theme = useMuiTheme();
+  // Use theme.palette.mode, theme.palette.primary.main, etc.
+}
+```
+
+#### Custom Theme Hook
+
+To access the theme mode and toggle function:
+
+```tsx
+import { useTheme } from './theme';
+
+function MyComponent() {
+  const { mode, toggleTheme } = useTheme();
+  // mode is 'light' | 'dark'
+  // toggleTheme() switches between themes
+}
+```
+
+#### Tailwind Dark Mode Classes
+
+Use Tailwind's `dark:` variant for dark mode styles:
+
+```tsx
+<div className="bg-white dark:bg-gray-800 text-black dark:text-white">
+  Content that adapts to theme
+</div>
+```
+
+The `dark` class is automatically added to the `<html>` element when dark mode is active.
+
+## Development
+
+### Prerequisites
+
+- Node.js 18+
+- Yarn (or npm)
+
+### Getting Started
+
+```bash
+# Install dependencies
+yarn install
+
+# Start development server
+yarn dev
+
+# Build for production
+yarn build
+
+# Preview production build
+yarn preview
+```
+
+### Code Formatting
+
+```bash
+# Format code
+yarn format
+
+# Check formatting
+yarn format:check
+```
+
+## React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 

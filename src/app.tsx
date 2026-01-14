@@ -1,14 +1,24 @@
 import { useState } from 'react';
-import { Button, TextField, Box, Typography, Stack } from '@mui/material';
+import { Button, TextField, Box, Typography, Stack, AppBar, Toolbar } from '@mui/material';
 import { Favorite as FavoriteIcon } from '@mui/icons-material';
 import reactLogo from './assets/react.svg';
 import viteLogo from '/vite.svg';
+import { ThemeToggle } from './components/theme-toggle';
 
 function App() {
   const [count, setCount] = useState(0);
 
   return (
     <>
+      <AppBar position="static">
+        <Toolbar sx={{ justifyContent: 'space-between' }}>
+          <Typography variant="h6" component="div">
+            Board Game
+          </Typography>
+          <ThemeToggle />
+        </Toolbar>
+      </AppBar>
+
       <div>
         <a href="https://vite.dev" target="_blank">
           <img src={viteLogo} className="logo" alt="Vite logo" />
@@ -20,8 +30,8 @@ function App() {
       <h1>Vite + React</h1>
 
       {/* Test Tailwind utilities */}
-      <div className="bg-blue-100 p-4 rounded-lg mb-4">
-        <p className="text-blue-800 font-semibold">✓ Tailwind CSS is working!</p>
+      <div className="bg-blue-100 dark:bg-blue-900 p-4 rounded-lg mb-4">
+        <p className="text-blue-800 dark:text-blue-200 font-semibold">✓ Tailwind CSS is working!</p>
       </div>
 
       {/* Test MUI components */}
