@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -18,6 +18,7 @@ import {
 } from '@mui/material';
 import { getGames, type Game } from '@/api/games';
 import { GameMenuDialog } from '@/components/game-menu-dialog';
+import { FunctionButtons } from '@/components/game-board';
 
 export const Dashboard = () => {
   const navigate = useNavigate();
@@ -28,6 +29,8 @@ export const Dashboard = () => {
   const [showMenuDialog, setShowMenuDialog] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
   const [instructions, setInstructions] = useState<string | null>(null);
+  const [selectedGameIndex, setSelectedGameIndex] = useState(0);
+  const gameCardsRef = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
     const fetchGames = async () => {
@@ -68,6 +71,56 @@ export const Dashboard = () => {
     setInstructions(null);
   };
 
+  // Function button handlers for game selection
+  const handleLeft = () => {
+    if (games.length > 0 && !showMenuDialog && !showInstructions) {
+      setSelectedGameIndex((prev) => (prev > 0 ? prev - 1 : games.length - 1));
+    }
+  };
+
+  const handleRight = () => {
+    if (games.length > 0 && !showMenuDialog && !showInstructions) {
+      setSelectedGameIndex((prev) => (prev < games.length - 1 ? prev + 1 : 0));
+    }
+  };
+
+  const handleEnter = () => {
+    if (games.length > 0 && !showMenuDialog && !showInstructions) {
+      const game = games[selectedGameIndex];
+      if (game) {
+        handleGameClick(game);
+      }
+    }
+  };
+
+  const handleBack = () => {
+    if (showMenuDialog) {
+      setShowMenuDialog(false);
+    } else if (showInstructions) {
+      handleCloseInstructions();
+    }
+  };
+
+  const handleHint = () => {
+    // Show help/info about using function buttons
+    if (games.length > 0 && !showMenuDialog && !showInstructions) {
+      const game = games[selectedGameIndex];
+      if (game) {
+        handleShowInstructions(game.instructions);
+      }
+    }
+  };
+
+  // Scroll selected game into view
+  useEffect(() => {
+    if (gameCardsRef.current[selectedGameIndex]) {
+      gameCardsRef.current[selectedGameIndex]?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+      });
+    }
+  }, [selectedGameIndex]);
+
   return (
     <Container maxWidth="lg">
       <Box sx={{ mt: 4, mb: 4 }}>
@@ -100,61 +153,85 @@ export const Dashboard = () => {
             )}
 
             {!loading && !error && games.length > 0 && (
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: {
-                    xs: '1fr',
-                    sm: 'repeat(2, 1fr)',
-                    md: 'repeat(2, 1fr)',
-                  },
-                  gap: 3,
-                  mt: 2,
-                }}
-              >
-                {games.map((game) => (
-                  <Card
-                    key={game.id}
-                    sx={{
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      '&:hover': {
-                        boxShadow: 6,
-                      },
-                    }}
-                  >
-                    <CardActionArea
-                      onClick={() => handleGameClick(game)}
+              <>
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: {
+                      xs: '1fr',
+                      sm: 'repeat(2, 1fr)',
+                      md: 'repeat(2, 1fr)',
+                    },
+                    gap: 3,
+                    mt: 2,
+                  }}
+                >
+                  {games.map((game, index) => (
+                    <Card
+                      key={game.id}
+                      ref={(el) => {
+                        gameCardsRef.current[index] = el;
+                      }}
                       sx={{
                         height: '100%',
                         display: 'flex',
                         flexDirection: 'column',
-                        alignItems: 'stretch',
+                        border:
+                          index === selectedGameIndex && !showMenuDialog && !showInstructions
+                            ? '3px solid'
+                            : 'none',
+                        borderColor: 'primary.main',
+                        '&:hover': {
+                          boxShadow: 6,
+                        },
                       }}
                     >
-                      <CardContent sx={{ flexGrow: 1 }}>
-                        <Typography variant="h6" component="h3" gutterBottom>
-                          {game.name}
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          sx={{
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            display: '-webkit-box',
-                            WebkitLineClamp: 3,
-                            WebkitBoxOrient: 'vertical',
-                          }}
-                        >
-                          {game.description || 'No description available.'}
-                        </Typography>
-                      </CardContent>
-                    </CardActionArea>
-                  </Card>
-                ))}
-              </Box>
+                      <CardActionArea
+                        onClick={() => handleGameClick(game)}
+                        sx={{
+                          height: '100%',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'stretch',
+                        }}
+                      >
+                        <CardContent sx={{ flexGrow: 1 }}>
+                          <Typography variant="h6" component="h3" gutterBottom>
+                            {game.name}
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              display: '-webkit-box',
+                              WebkitLineClamp: 3,
+                              WebkitBoxOrient: 'vertical',
+                            }}
+                          >
+                            {game.description || 'No description available.'}
+                          </Typography>
+                        </CardContent>
+                      </CardActionArea>
+                    </Card>
+                  ))}
+                </Box>
+                <FunctionButtons
+                  onLeft={handleLeft}
+                  onRight={handleRight}
+                  onEnter={handleEnter}
+                  onBack={handleBack}
+                  onHint={handleHint}
+                  disabled={{
+                    left: showMenuDialog || showInstructions,
+                    right: showMenuDialog || showInstructions,
+                    enter: showMenuDialog || showInstructions,
+                    back: !showMenuDialog && !showInstructions,
+                    hint: showMenuDialog || showInstructions,
+                  }}
+                />
+              </>
             )}
           </Box>
         </Paper>

@@ -43,13 +43,19 @@ export const GameDetail = () => {
     enabled: isCaroGame,
   });
 
-  // Initialize board cells from game configuration (for non-caro games)
+  // Initialize board cells from game configuration
   const boardCells = useMemo<BoardCell[][]>(() => {
     if (!game) return [];
 
-    // If caro game, use cells from hook
+    // If caro game, use cells from hook and add selection state
     if (isCaroGame) {
-      return caroGame.boardCells;
+      return caroGame.boardCells.map((row, rowIndex) =>
+        row.map((cell, colIndex) => ({
+          ...cell,
+          selected:
+            selectedCell?.row === rowIndex && selectedCell?.col === colIndex ? true : cell.selected,
+        }))
+      );
     }
 
     // For other games, create empty cells
@@ -114,6 +120,7 @@ export const GameDetail = () => {
   const handleCellClick = (row: number, col: number) => {
     if (isCaroGame) {
       caroGame.handleCellClick(row, col);
+      setSelectedCell(undefined); // Clear selection after move
     } else {
       setSelectedCell({ row, col });
     }
@@ -121,31 +128,82 @@ export const GameDetail = () => {
 
   // Function button handlers
   const handleLeft = () => {
-    if (selectedCell) {
-      const newCol = Math.max(0, selectedCell.col - 1);
-      setSelectedCell({ ...selectedCell, col: newCol });
+    if (showInstructions || showResultDialog) return;
+    
+    if (isCaroGame) {
+      // For Caro game, navigate selected cell left (horizontal only for simplicity)
+      if (selectedCell && game) {
+        const newCol = Math.max(0, selectedCell.col - 1);
+        setSelectedCell({ ...selectedCell, col: newCol });
+      } else if (game && !caroGame.isGameEnded && !caroGame.isAITurn) {
+        // Start selection at first cell if no selection
+        setSelectedCell({ row: 0, col: 0 });
+      }
+    } else {
+      // For other games, navigate selected cell left
+      if (selectedCell && game) {
+        const newCol = Math.max(0, selectedCell.col - 1);
+        setSelectedCell({ ...selectedCell, col: newCol });
+      } else if (game) {
+        setSelectedCell({ row: 0, col: 0 });
+      }
     }
-    // TODO: Implement game-specific left navigation
   };
 
   const handleRight = () => {
-    if (selectedCell && game) {
-      const newCol = Math.min(game.default_board_width - 1, selectedCell.col + 1);
-      setSelectedCell({ ...selectedCell, col: newCol });
+    if (showInstructions || showResultDialog) return;
+    
+    if (isCaroGame) {
+      // For Caro game, navigate selected cell right (horizontal only for simplicity)
+      if (selectedCell && game) {
+        const newCol = Math.min(game.default_board_width - 1, selectedCell.col + 1);
+        setSelectedCell({ ...selectedCell, col: newCol });
+      } else if (game && !caroGame.isGameEnded && !caroGame.isAITurn) {
+        // Start selection at first cell if no selection
+        setSelectedCell({ row: 0, col: 0 });
+      }
+    } else {
+      // For other games, navigate selected cell right
+      if (selectedCell && game) {
+        const newCol = Math.min(game.default_board_width - 1, selectedCell.col + 1);
+        setSelectedCell({ ...selectedCell, col: newCol });
+      } else if (game) {
+        setSelectedCell({ row: 0, col: 0 });
+      }
     }
-    // TODO: Implement game-specific right navigation
   };
 
   const handleEnter = () => {
-    if (selectedCell) {
-      // TODO: Implement game-specific enter action
-      console.log(`Enter pressed at: row ${selectedCell.row}, col ${selectedCell.col}`);
+    if (showInstructions || showResultDialog) return;
+    
+    if (isCaroGame) {
+      // For Caro game, make move if cell is selected and game is active
+      if (
+        selectedCell &&
+        !caroGame.isGameEnded &&
+        !caroGame.isAITurn &&
+        caroGame.gameState?.currentPlayer === 'player'
+      ) {
+        caroGame.handleCellClick(selectedCell.row, selectedCell.col);
+        setSelectedCell(undefined); // Clear selection after move
+      }
+    } else {
+      // For other games, perform enter action
+      if (selectedCell) {
+        console.log(`Enter pressed at: row ${selectedCell.row}, col ${selectedCell.col}`);
+        // TODO: Implement game-specific enter action
+      }
     }
   };
 
   const handleBack = () => {
-    setSelectedCell(undefined);
-    // TODO: Implement game-specific back action
+    if (showInstructions) {
+      handleToggleInstructions();
+    } else if (showResultDialog) {
+      setShowResultDialog(false);
+    } else {
+      handleBackToDashboard();
+    }
   };
 
   const handleHint = () => {
@@ -259,15 +317,23 @@ export const GameDetail = () => {
                       : false
                   }
                 />
-                {!isCaroGame && (
-                  <FunctionButtons
-                    onLeft={handleLeft}
-                    onRight={handleRight}
-                    onEnter={handleEnter}
-                    onBack={handleBack}
-                    onHint={handleHint}
-                  />
-                )}
+                <FunctionButtons
+                  onLeft={handleLeft}
+                  onRight={handleRight}
+                  onEnter={handleEnter}
+                  onBack={handleBack}
+                  onHint={handleHint}
+                  disabled={{
+                    left: showInstructions || showResultDialog,
+                    right: showInstructions || showResultDialog,
+                    enter:
+                      showInstructions ||
+                      showResultDialog ||
+                      (isCaroGame && (caroGame.isGameEnded || caroGame.isAITurn)),
+                    back: false,
+                    hint: showResultDialog,
+                  }}
+                />
               </>
             )}
           </Box>
