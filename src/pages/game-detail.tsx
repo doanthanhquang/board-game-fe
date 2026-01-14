@@ -8,6 +8,7 @@ import {
   Button,
   CircularProgress,
   Alert,
+  Snackbar,
   IconButton,
   Dialog,
   DialogTitle,
@@ -36,6 +37,7 @@ import { GameBoard, FunctionButtons } from '@/components/game-board';
 import { GameResultDialog } from '@/components/game-result-dialog';
 import type { BoardCell } from '@/types/board';
 import { useCaroGame } from '@/hooks/use-caro-game';
+import { useTicTacToeGame } from '@/hooks/use-tic-tac-toe-game';
 
 export const GameDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -54,7 +56,12 @@ export const GameDetail = () => {
   const [scoreSubmitted, setScoreSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveToastOpen, setSaveToastOpen] = useState(false);
+  const [saveToastMessage, setSaveToastMessage] = useState<string | null>(null);
+  const [saveToastSeverity, setSaveToastSeverity] = useState<'success' | 'error'>('success');
+  const [hasChosenIcon, setHasChosenIcon] = useState(false);
   const isCaroGame = game?.slug === 'caro-4' || game?.slug === 'caro-5';
+  const isTicTacToeGame = game?.slug === 'tic-tac-toe';
   const targetInRow = game?.slug === 'caro-5' ? 5 : 4;
   const shouldContinue = searchParams.get('continue') === '1';
 
@@ -65,6 +72,12 @@ export const GameDetail = () => {
     enabled: isCaroGame && !showIconSelector,
     playerIcon: playerIcon,
     targetInRow: targetInRow,
+  });
+
+  // Tic-Tac-Toe game hook (3x3, player vs computer with X/O selection)
+  const ticTacToeGame = useTicTacToeGame({
+    enabled: Boolean(isTicTacToeGame && !showIconSelector),
+    playerIcon,
   });
 
   // Live player score (number of player moves in current game)
@@ -85,10 +98,38 @@ export const GameDetail = () => {
 
   // Show icon selector when starting a NEW caro game (not when continuing)
   useEffect(() => {
-    if (isCaroGame && game && !showIconSelector && !caroGame.gameState && !shouldContinue) {
+    if (
+      isCaroGame &&
+      game &&
+      !showIconSelector &&
+      !caroGame.gameState &&
+      !shouldContinue &&
+      !hasChosenIcon
+    ) {
       setShowIconSelector(true);
     }
-  }, [isCaroGame, game, showIconSelector, caroGame.gameState, shouldContinue]);
+  }, [isCaroGame, game, showIconSelector, caroGame.gameState, shouldContinue, hasChosenIcon]);
+
+  // Show icon selector when starting Tic-Tac-Toe game
+  useEffect(() => {
+    if (
+      isTicTacToeGame &&
+      game &&
+      !showIconSelector &&
+      !ticTacToeGame.gameState &&
+      !shouldContinue &&
+      !hasChosenIcon
+    ) {
+      setShowIconSelector(true);
+    }
+  }, [
+    isTicTacToeGame,
+    game,
+    showIconSelector,
+    ticTacToeGame.gameState,
+    shouldContinue,
+    hasChosenIcon,
+  ]);
 
   // Submit score when player wins (Caro only) and clear saves for finished game
   useEffect(() => {
@@ -140,7 +181,8 @@ export const GameDetail = () => {
     setSelectedCell(undefined);
     setShowResultDialog(false);
     setScoreSubmitted(false);
-    if (isCaroGame) {
+    if (isCaroGame || isTicTacToeGame) {
+      setHasChosenIcon(false);
       setShowIconSelector(true);
     }
   };
@@ -148,6 +190,17 @@ export const GameDetail = () => {
   // Initialize board cells from game configuration
   const boardCells = useMemo<BoardCell[][]>(() => {
     if (!game) return [];
+
+    // Tic-Tac-Toe game uses its own board cells
+    if (isTicTacToeGame && ticTacToeGame.boardCells.length > 0) {
+      return ticTacToeGame.boardCells.map((row, rowIndex) =>
+        row.map((cell, colIndex) => ({
+          ...cell,
+          selected:
+            selectedCell?.row === rowIndex && selectedCell?.col === colIndex ? true : cell.selected,
+        }))
+      );
+    }
 
     // If caro game, use cells from hook and add selection state
     if (isCaroGame) {
@@ -175,7 +228,14 @@ export const GameDetail = () => {
       }
     }
     return cells;
-  }, [game, isCaroGame, caroGame.boardCells, selectedCell]);
+  }, [
+    game,
+    isCaroGame,
+    isTicTacToeGame,
+    caroGame.boardCells,
+    ticTacToeGame.boardCells,
+    selectedCell,
+  ]);
 
   useEffect(() => {
     const fetchGame = async () => {
@@ -240,12 +300,40 @@ export const GameDetail = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shouldContinue, isCaroGame, slug]);
 
-  // Show result dialog when game ends
+  // Show result dialog when Caro game ends
   useEffect(() => {
     if (isCaroGame && caroGame.isGameEnded && caroGame.gameState) {
       setShowResultDialog(true);
     }
   }, [isCaroGame, caroGame.isGameEnded, caroGame.gameState]);
+
+  // Show result dialog when Tic-Tac-Toe game ends
+  useEffect(() => {
+    if (isTicTacToeGame && ticTacToeGame.isGameEnded && ticTacToeGame.gameState) {
+      setShowResultDialog(true);
+    }
+  }, [isTicTacToeGame, ticTacToeGame.isGameEnded, ticTacToeGame.gameState]);
+
+  // Record score for Tic-Tac-Toe when player wins (ranking by number of wins)
+  useEffect(() => {
+    if (!isTicTacToeGame || !game || !ticTacToeGame.gameState || scoreSubmitted || !slug) {
+      return;
+    }
+
+    const status = ticTacToeGame.gameState.status;
+    const playerWon =
+      (status === 'x-won' && playerIcon === 'X') || (status === 'o-won' && playerIcon === 'O');
+
+    if (!playerWon) return;
+
+    const movesCount = ticTacToeGame.gameState.moves || 1;
+
+    recordGameScore(slug, { movesCount, result: 'win' }).catch(() => {
+      // Ignore score errors in UI
+    });
+
+    setScoreSubmitted(true);
+  }, [isTicTacToeGame, game, ticTacToeGame.gameState, scoreSubmitted, slug, playerIcon]);
 
   const handleBackToDashboard = () => {
     navigate('/dashboard');
@@ -256,17 +344,26 @@ export const GameDetail = () => {
   };
 
   const handleSaveGame = async () => {
-    if (!isCaroGame || !slug) return;
-    const state = caroGame.getSerializableState();
-    if (!state) return;
+    if (!slug) return;
+    // Save Caro or Tic-Tac-Toe state depending on current game
+    const caroState = isCaroGame ? caroGame.getSerializableState() : null;
+    const tttState = isTicTacToeGame ? ticTacToeGame.gameState : null;
+    const stateToSave = caroState ?? tttState;
+    if (!stateToSave) return;
 
     try {
       setSaving(true);
       setSaveError(null);
-      await saveGameState(slug, { gameState: state });
+      await saveGameState(slug, { gameState: stateToSave });
+      setSaveToastSeverity('success');
+      setSaveToastMessage('Lưu ván chơi thành công!');
+      setSaveToastOpen(true);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Không thể lưu ván chơi.';
       setSaveError(message);
+      setSaveToastSeverity('error');
+      setSaveToastMessage(message);
+      setSaveToastOpen(true);
     } finally {
       setSaving(false);
     }
@@ -277,6 +374,9 @@ export const GameDetail = () => {
     if (isCaroGame) {
       caroGame.handleCellClick(row, col);
       setSelectedCell(undefined); // Clear selection after move
+    } else if (isTicTacToeGame) {
+      ticTacToeGame.handleCellClick(row, col);
+      setSelectedCell(undefined);
     } else {
       setSelectedCell({ row, col });
     }
@@ -389,6 +489,11 @@ export const GameDetail = () => {
         caroGame.handleCellClick(selectedCell.row, selectedCell.col);
         setSelectedCell(undefined); // Clear selection after move
       }
+    } else if (isTicTacToeGame) {
+      if (selectedCell && !ticTacToeGame.isGameEnded) {
+        ticTacToeGame.handleCellClick(selectedCell.row, selectedCell.col);
+        setSelectedCell(undefined);
+      }
     } else {
       // For other games, perform enter action
       if (selectedCell) {
@@ -449,7 +554,6 @@ export const GameDetail = () => {
       </Container>
     );
   }
-
   return (
     <Container maxWidth="lg">
       <Box sx={{ mt: 4, mb: 4 }}>
@@ -522,6 +626,36 @@ export const GameDetail = () => {
                 )}
               </Box>
             )}
+            {isTicTacToeGame && ticTacToeGame.gameState && (
+              <Box sx={{ mb: 2, textAlign: 'center' }}>
+                <Typography variant="h6" gutterBottom>
+                  {ticTacToeGame.getStatusMessage()}
+                </Typography>
+                <Box sx={{ mt: 1, display: 'flex', justifyContent: 'center', gap: 1 }}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<SaveIcon />}
+                    size="small"
+                    onClick={handleSaveGame}
+                    disabled={saving}
+                  >
+                    {saving ? 'Đang lưu...' : 'Lưu ván'}
+                  </Button>
+                </Box>
+                {ticTacToeGame.isGameEnded && (
+                  <Box sx={{ mt: 1, display: 'flex', justifyContent: 'center', gap: 1 }}>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<RefreshIcon />}
+                      onClick={ticTacToeGame.handleReset}
+                    >
+                      New Game
+                    </Button>
+                  </Box>
+                )}
+              </Box>
+            )}
             {game && boardCells.length > 0 && (
               <>
                 <GameBoard
@@ -535,7 +669,11 @@ export const GameDetail = () => {
                       ? caroGame.isGameEnded ||
                         caroGame.isAITurn ||
                         caroGame.gameState?.currentPlayer === 'computer'
-                      : false
+                      : isTicTacToeGame
+                        ? ticTacToeGame.isGameEnded ||
+                          ticTacToeGame.gameState?.currentPlayer ===
+                            (playerIcon === 'X' ? 'O' : 'X')
+                        : false
                   }
                 />
                 <FunctionButtons
@@ -554,7 +692,11 @@ export const GameDetail = () => {
                     enter:
                       showInstructions ||
                       showResultDialog ||
-                      (isCaroGame && (caroGame.isGameEnded || caroGame.isAITurn)),
+                      (isCaroGame && (caroGame.isGameEnded || caroGame.isAITurn)) ||
+                      (isTicTacToeGame &&
+                        (ticTacToeGame.isGameEnded ||
+                          ticTacToeGame.gameState?.currentPlayer ===
+                            (playerIcon === 'X' ? 'O' : 'X'))),
                     back: false,
                     hint: showResultDialog,
                   }}
@@ -579,8 +721,8 @@ export const GameDetail = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Icon Selector Dialog for Caro Game */}
-      {isCaroGame && (
+      {/* Icon Selector Dialog for games with X/O selection (Caro, Tic-Tac-Toe) */}
+      {(isCaroGame || isTicTacToeGame) && (
         <Dialog
           open={showIconSelector}
           onClose={() => {}} // Prevent closing without selection
@@ -640,6 +782,7 @@ export const GameDetail = () => {
             <Button
               variant="contained"
               onClick={() => {
+                setHasChosenIcon(true);
                 setShowIconSelector(false);
               }}
               size="large"
@@ -661,6 +804,46 @@ export const GameDetail = () => {
           gameName={game.name}
           score={playerScore}
         />
+      )}
+
+      {isTicTacToeGame && ticTacToeGame.gameState && (
+        <GameResultDialog
+          open={showResultDialog}
+          gameStatus={
+            ticTacToeGame.gameState.status === 'draw'
+              ? 'draw'
+              : ticTacToeGame.gameState.status === 'playing'
+                ? 'playing'
+                : (ticTacToeGame.gameState.status === 'x-won' && playerIcon === 'X') ||
+                    (ticTacToeGame.gameState.status === 'o-won' && playerIcon === 'O')
+                  ? 'player-won'
+                  : 'computer-won'
+          }
+          onClose={() => setShowResultDialog(false)}
+          onNewGame={handleNewGameFromResult}
+          gameName={game.name}
+        />
+      )}
+
+      {/* Toast for save game result */}
+      {saveToastMessage && (
+        <Snackbar
+          open={saveToastOpen}
+          autoHideDuration={3000}
+          onClose={(_, reason) => {
+            if (reason === 'clickaway') return;
+            setSaveToastOpen(false);
+          }}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert
+            onClose={() => setSaveToastOpen(false)}
+            severity={saveToastSeverity}
+            sx={{ width: '100%' }}
+          >
+            {saveToastMessage}
+          </Alert>
+        </Snackbar>
       )}
     </Container>
   );

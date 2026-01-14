@@ -15,6 +15,7 @@ export const GameRanking = ({ slug }: GameRankingProps) => {
   const [rankings, setRankings] = useState<GameRankingEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isTicTacToe = slug === 'tic-tac-toe';
 
   useEffect(() => {
     const fetchRankings = async () => {
@@ -23,7 +24,8 @@ export const GameRanking = ({ slug }: GameRankingProps) => {
       try {
         setLoading(true);
         setError(null);
-        const data = await getGameRankings(slug, rankingTab);
+        const sort = isTicTacToe ? 'wins' : 'best_moves';
+        const data = await getGameRankings(slug, rankingTab, sort);
         setRankings(data);
       } catch (err) {
         const message =
@@ -35,7 +37,7 @@ export const GameRanking = ({ slug }: GameRankingProps) => {
     };
 
     fetchRankings();
-  }, [slug, rankingTab]);
+  }, [slug, rankingTab, isTicTacToe]);
 
   return (
     <Box>
@@ -89,9 +91,11 @@ export const GameRanking = ({ slug }: GameRankingProps) => {
               <Box component="th" sx={{ width: '40%' }}>
                 Người chơi
               </Box>
-              <Box component="th" sx={{ width: '25%', textAlign: 'center !important' }}>
-                Số nước đi tốt nhất
-              </Box>
+              {!isTicTacToe && (
+                <Box component="th" sx={{ width: '25%', textAlign: 'center !important' }}>
+                  Số nước đi tốt nhất
+                </Box>
+              )}
               <Box component="th" sx={{ width: '25%', textAlign: 'center !important' }}>
                 Số trận thắng
               </Box>
@@ -104,9 +108,11 @@ export const GameRanking = ({ slug }: GameRankingProps) => {
                   {entry.rank}
                 </Box>
                 <Box component="td">{entry.username}</Box>
-                <Box component="td" sx={{ textAlign: 'center' }}>
-                  {entry.best_moves}
-                </Box>
+                {!isTicTacToe && (
+                  <Box component="td" sx={{ textAlign: 'center' }}>
+                    {entry.best_moves}
+                  </Box>
+                )}
                 <Box component="td" sx={{ textAlign: 'center' }}>
                   {entry.wins}
                 </Box>

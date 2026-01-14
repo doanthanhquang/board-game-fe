@@ -5,6 +5,7 @@
 
 import { get, post, del } from '@/api';
 import type { CaroGameState } from '@/types/game-state';
+import type { TicTacToeGameState } from '@/games/tic-tac-toe/tic-tac-toe-game';
 
 /**
  * Game interface matching backend response
@@ -87,7 +88,7 @@ export interface GameSaveListResponse {
 }
 
 export interface SaveGameStateRequest {
-  gameState: CaroGameState;
+  gameState: CaroGameState | TicTacToeGameState;
   saveName?: string;
 }
 
@@ -145,12 +146,18 @@ export const recordGameScore = async (
  * Fetch rankings for a game
  * @param slug - Game slug identifier
  * @param scope - 'global' or 'friends'
+ * @param sort - 'best_moves' (default) or 'wins'
  */
 export const getGameRankings = async (
   slug: string,
-  scope: 'global' | 'friends' = 'global'
+  scope: 'global' | 'friends' = 'global',
+  sort?: 'best_moves' | 'wins'
 ): Promise<GameRankingEntry[]> => {
-  const response = await get<GameRankingResponse>(`/games/${slug}/rankings`, { scope });
+  const params: Record<string, string> = { scope };
+  if (sort) {
+    params.sort = sort;
+  }
+  const response = await get<GameRankingResponse>(`/games/${slug}/rankings`, params);
   return response.data;
 };
 
