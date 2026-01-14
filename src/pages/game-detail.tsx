@@ -19,6 +19,7 @@ import HelpIcon from '@mui/icons-material/Help';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { getGameBySlug, type Game } from '@/api/games';
 import { GameBoard, FunctionButtons } from '@/components/game-board';
+import { GameResultDialog } from '@/components/game-result-dialog';
 import type { BoardCell } from '@/types/board';
 import { useCaroGame } from '@/hooks/use-caro-game';
 
@@ -29,6 +30,7 @@ export const GameDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showInstructions, setShowInstructions] = useState(false);
+  const [showResultDialog, setShowResultDialog] = useState(false);
   const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | undefined>(
     undefined
   );
@@ -92,6 +94,13 @@ export const GameDetail = () => {
 
     fetchGame();
   }, [slug]);
+
+  // Show result dialog when game ends
+  useEffect(() => {
+    if (isCaroGame && caroGame.isGameEnded && caroGame.gameState) {
+      setShowResultDialog(true);
+    }
+  }, [isCaroGame, caroGame.isGameEnded, caroGame.gameState]);
 
   const handleBackToDashboard = () => {
     navigate('/dashboard');
@@ -278,6 +287,17 @@ export const GameDetail = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Game Result Dialog - Common component for all games */}
+      {isCaroGame && caroGame.gameState && (
+        <GameResultDialog
+          open={showResultDialog}
+          gameStatus={caroGame.gameState.gameStatus}
+          onClose={() => setShowResultDialog(false)}
+          onNewGame={caroGame.handleReset}
+          gameName={game.name}
+        />
+      )}
     </Container>
   );
 };
