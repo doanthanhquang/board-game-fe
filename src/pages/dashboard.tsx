@@ -1,8 +1,3 @@
-/**
- * Dashboard Page
- * Main dashboard page displayed after successful login
- */
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -16,11 +11,9 @@ import {
   CircularProgress,
   Alert,
 } from '@mui/material';
-import { useAuth } from '@/context/use-auth';
 import { getGames, type Game } from '@/api/games';
 
 export const Dashboard = () => {
-  const { currentUser } = useAuth();
   const navigate = useNavigate();
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,24 +48,10 @@ export const Dashboard = () => {
       <Box sx={{ mt: 4, mb: 4 }}>
         <Paper elevation={3} sx={{ padding: 4 }}>
           <Typography variant="h4" component="h1" gutterBottom>
-            Welcome to Dashboard
+            Welcome to Board Game
           </Typography>
 
-          {currentUser && (
-            <Box sx={{ mt: 2, mb: 4 }}>
-              <Typography variant="body1" gutterBottom>
-                <strong>Email:</strong> {currentUser.email}
-              </Typography>
-              <Typography variant="body1" gutterBottom>
-                <strong>Username:</strong> {currentUser.username}
-              </Typography>
-              <Typography variant="body1" gutterBottom>
-                <strong>Role:</strong> {currentUser.role}
-              </Typography>
-            </Box>
-          )}
-
-          <Box sx={{ mt: 4 }}>
+          <Box sx={{ mt: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <Typography variant="h5" component="h2" gutterBottom>
               Select a Game
             </Typography>

@@ -1,9 +1,3 @@
-/**
- * useAuth Hook
- * Provides access to authentication context
- * Separated for Fast Refresh compatibility
- */
-
 import { useContext } from 'react';
 import { AuthContext } from '@/context/auth-context-export';
 import type { AuthContextType } from '@/context/auth-context-types';

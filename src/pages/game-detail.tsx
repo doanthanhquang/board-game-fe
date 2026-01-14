@@ -1,12 +1,21 @@
-/**
- * Game Detail Page
- * Displays game information and game board (placeholder)
- */
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box, Container, Typography, Paper, Button, CircularProgress, Alert } from '@mui/material';
+import {
+  Box,
+  Container,
+  Typography,
+  Paper,
+  Button,
+  CircularProgress,
+  Alert,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import HelpIcon from '@mui/icons-material/Help';
 import { getGameBySlug, type Game } from '@/api/games';
 
 export const GameDetail = () => {
@@ -15,6 +24,7 @@ export const GameDetail = () => {
   const [game, setGame] = useState<Game | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showInstructions, setShowInstructions] = useState(false);
 
   useEffect(() => {
     const fetchGame = async () => {
@@ -44,6 +54,10 @@ export const GameDetail = () => {
 
   const handleBack = () => {
     navigate('/dashboard');
+  };
+
+  const handleToggleInstructions = () => {
+    setShowInstructions(!showInstructions);
   };
 
   if (loading) {
@@ -95,9 +109,19 @@ export const GameDetail = () => {
             </Button>
           </Box>
 
-          <Typography variant="h3" component="h1" gutterBottom>
-            {game.name}
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+            <Typography variant="h3" component="h1">
+              {game.name}
+            </Typography>
+            <IconButton
+              color="primary"
+              onClick={handleToggleInstructions}
+              sx={{ ml: 1 }}
+              aria-label="Show game instructions"
+            >
+              <HelpIcon />
+            </IconButton>
+          </Box>
 
           {game.description && (
             <Typography variant="body1" sx={{ mt: 2 }}>
@@ -115,6 +139,20 @@ export const GameDetail = () => {
           </Box>
         </Paper>
       </Box>
+
+      <Dialog open={showInstructions} onClose={handleToggleInstructions} maxWidth="md" fullWidth>
+        <DialogTitle>Game Instructions</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-line' }}>
+            {game.instructions || 'No instructions available for this game.'}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleToggleInstructions} variant="contained">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };

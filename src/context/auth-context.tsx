@@ -1,8 +1,3 @@
-/**
- * Authentication Context Provider
- * Provides authentication state and functions throughout the application
- */
-
 import { useState, useEffect, type ReactNode } from 'react';
 import { login as apiLogin, type User, type LoginRequest } from '@/api/auth';
 import type { AuthContextType } from '@/context/auth-context-types';

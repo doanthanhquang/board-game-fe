@@ -1,8 +1,3 @@
-/**
- * Authentication Context Types
- * Separated for Fast Refresh compatibility
- */
-
 import type { User, LoginRequest } from '@/api/auth';
 
 export interface AuthContextType {
