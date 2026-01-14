@@ -16,9 +16,11 @@ import {
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import HelpIcon from '@mui/icons-material/Help';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import { getGameBySlug, type Game } from '@/api/games';
 import { GameBoard, FunctionButtons } from '@/components/game-board';
 import type { BoardCell } from '@/types/board';
+import { useCaroGame } from '@/hooks/use-caro-game';
 
 export const GameDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -30,11 +32,25 @@ export const GameDetail = () => {
   const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | undefined>(
     undefined
   );
+  const isCaroGame = game?.slug === 'caro-4';
 
-  // Initialize board cells from game configuration
+  // Use caro game hook
+  const caroGame = useCaroGame({
+    width: game?.default_board_width || 0,
+    height: game?.default_board_height || 0,
+    enabled: isCaroGame,
+  });
+
+  // Initialize board cells from game configuration (for non-caro games)
   const boardCells = useMemo<BoardCell[][]>(() => {
     if (!game) return [];
 
+    // If caro game, use cells from hook
+    if (isCaroGame) {
+      return caroGame.boardCells;
+    }
+
+    // For other games, create empty cells
     const cells: BoardCell[][] = [];
     for (let row = 0; row < game.default_board_height; row++) {
       cells[row] = [];
@@ -43,13 +59,13 @@ export const GameDetail = () => {
           row,
           col,
           color: null,
-          selected: false,
+          selected: selectedCell?.row === row && selectedCell?.col === col,
           disabled: false,
         };
       }
     }
     return cells;
-  }, [game]);
+  }, [game, isCaroGame, caroGame.boardCells, selectedCell]);
 
   useEffect(() => {
     const fetchGame = async () => {
@@ -87,9 +103,11 @@ export const GameDetail = () => {
 
   // Board cell click handler
   const handleCellClick = (row: number, col: number) => {
-    setSelectedCell({ row, col });
-    // TODO: Implement game-specific logic here
-    console.log(`Cell clicked: row ${row}, col ${col}`);
+    if (isCaroGame) {
+      caroGame.handleCellClick(row, col);
+    } else {
+      setSelectedCell({ row, col });
+    }
   };
 
   // Function button handlers
@@ -123,7 +141,6 @@ export const GameDetail = () => {
 
   const handleHint = () => {
     handleToggleInstructions();
-    // TODO: Implement game-specific hint/help
   };
 
   if (loading) {
@@ -151,7 +168,11 @@ export const GameDetail = () => {
             <Alert severity="error" sx={{ mb: 2 }}>
               {error || 'Game not found'}
             </Alert>
-            <Button variant="contained" startIcon={<ArrowBackIcon />} onClick={handleBackToDashboard}>
+            <Button
+              variant="contained"
+              startIcon={<ArrowBackIcon />}
+              onClick={handleBackToDashboard}
+            >
               Back to Dashboard
             </Button>
           </Paper>
@@ -196,6 +217,23 @@ export const GameDetail = () => {
           )}
 
           <Box sx={{ mt: 4, p: 3, bgcolor: 'background.default', borderRadius: 2 }}>
+            {isCaroGame && caroGame.gameState && (
+              <Box sx={{ mb: 2, textAlign: 'center' }}>
+                <Typography variant="h6" gutterBottom>
+                  {caroGame.getStatusMessage()}
+                </Typography>
+                {caroGame.isGameEnded && (
+                  <Button
+                    variant="contained"
+                    startIcon={<RefreshIcon />}
+                    onClick={caroGame.handleReset}
+                    sx={{ mt: 1 }}
+                  >
+                    New Game
+                  </Button>
+                )}
+              </Box>
+            )}
             {game && boardCells.length > 0 && (
               <>
                 <GameBoard
@@ -204,14 +242,23 @@ export const GameDetail = () => {
                   cells={boardCells}
                   selectedCell={selectedCell}
                   onCellClick={handleCellClick}
+                  disabled={
+                    isCaroGame
+                      ? caroGame.isGameEnded ||
+                        caroGame.isAITurn ||
+                        caroGame.gameState?.currentPlayer === 'computer'
+                      : false
+                  }
                 />
-                <FunctionButtons
-                  onLeft={handleLeft}
-                  onRight={handleRight}
-                  onEnter={handleEnter}
-                  onBack={handleBack}
-                  onHint={handleHint}
-                />
+                {!isCaroGame && (
+                  <FunctionButtons
+                    onLeft={handleLeft}
+                    onRight={handleRight}
+                    onEnter={handleEnter}
+                    onBack={handleBack}
+                    onHint={handleHint}
+                  />
+                )}
               </>
             )}
           </Box>

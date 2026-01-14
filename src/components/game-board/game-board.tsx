@@ -61,8 +61,7 @@ export const GameBoard = ({
       >
         {cells.map((row) =>
           row.map((cell) => {
-            const isSelected =
-              selectedCell?.row === cell.row && selectedCell?.col === cell.col;
+            const isSelected = selectedCell?.row === cell.row && selectedCell?.col === cell.col;
             return (
               <BoardCell
                 key={`cell-${cell.row}-${cell.col}`}

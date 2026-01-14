@@ -24,10 +24,7 @@ export const FunctionButtons = ({
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       // Only handle if not typing in an input
-      if (
-        event.target instanceof HTMLInputElement ||
-        event.target instanceof HTMLTextAreaElement
-      ) {
+      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
         return;
       }
 

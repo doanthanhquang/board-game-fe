@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { IconButton, Tooltip } from '@mui/material';
+import { IconButton, Tooltip, useTheme } from '@mui/material';
 import type { BoardCell as BoardCellType } from '@/types/board';
 
 interface BoardCellProps {
@@ -12,10 +12,42 @@ interface BoardCellProps {
  * BoardCell component - renders a single circular button cell
  */
 export const BoardCell = memo(({ cell, onClick, size = 40 }: BoardCellProps) => {
+  const theme = useTheme();
+
   const handleClick = () => {
     if (!cell.disabled && onClick) {
       onClick(cell.row, cell.col);
     }
+  };
+
+  // Determine if cell has a piece (permanent color)
+  const hasPiece = cell.color !== null;
+
+  // Ensure color is always preserved for cells with pieces
+  const backgroundColor = hasPiece ? cell.color : 'transparent';
+
+  // Determine border color based on move player
+  const getBorderColor = () => {
+    if (cell.isLastMove) {
+      // Last move gets extra highlight - thicker border with distinct color
+      if (cell.movePlayer === 'player') {
+        return theme.palette.success.main; // Green for player's last move
+      } else if (cell.movePlayer === 'computer') {
+        return theme.palette.warning.main; // Orange/amber for computer's last move
+      }
+    } else if (hasPiece && cell.movePlayer) {
+      // All moves get colored border based on player
+      if (cell.movePlayer === 'player') {
+        return theme.palette.primary.dark; // Darker blue for player moves
+      } else if (cell.movePlayer === 'computer') {
+        return theme.palette.error.dark; // Darker red for computer moves
+      }
+    } else if (cell.selected && !hasPiece) {
+      return theme.palette.primary.main;
+    } else if (hasPiece) {
+      return 'rgba(0, 0, 0, 0.1)';
+    }
+    return theme.palette.divider;
   };
 
   const cellStyle = {
@@ -24,25 +56,30 @@ export const BoardCell = memo(({ cell, onClick, size = 40 }: BoardCellProps) => 
     minWidth: size,
     minHeight: size,
     borderRadius: '50%',
-    backgroundColor: cell.color || 'transparent',
-    border: cell.selected
-      ? '3px solid'
-      : cell.color
-        ? '2px solid'
-        : '1px solid',
-    borderColor: cell.selected
-      ? 'primary.main'
-      : cell.color
-        ? 'rgba(0, 0, 0, 0.1)'
-        : 'divider',
-    opacity: cell.disabled ? 0.5 : 1,
+    // Always keep the piece color if it exists - never change it
+    backgroundColor: backgroundColor,
+    border: cell.isLastMove
+      ? '4px solid' // Thicker border for last move
+      : cell.selected && !hasPiece
+        ? '3px solid'
+        : hasPiece
+          ? '2px solid' // Colored border for all moves
+          : '1px solid',
+    borderColor: getBorderColor(),
+    // Keep full opacity for cells with pieces - never reduce it
+    opacity: hasPiece ? 1 : cell.disabled && !cell.isLastMove ? 0.5 : 1,
     cursor: cell.disabled ? 'not-allowed' : 'pointer',
-    transition: 'all 0.2s ease-in-out',
+    // Only transition non-color properties for cells with pieces to preserve color
+    transition: hasPiece
+      ? 'border 0.2s ease-in-out, box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out'
+      : 'all 0.2s ease-in-out',
     '&:hover': {
+      // Never change background color on hover for cells with pieces
+      backgroundColor: hasPiece ? backgroundColor : undefined,
       transform: cell.disabled ? 'none' : 'scale(1.1)',
       boxShadow: cell.disabled ? 'none' : 2,
     },
-    boxShadow: cell.selected ? 3 : 0,
+    boxShadow: cell.isLastMove ? 4 : cell.selected && !hasPiece ? 3 : 0,
   };
 
   return (

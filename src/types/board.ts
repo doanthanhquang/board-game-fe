@@ -4,6 +4,8 @@ export interface BoardCell {
   color: string | null; // null = default/uncolored
   selected?: boolean;
   disabled?: boolean;
+  isLastMove?: boolean; // Highlight last move with thicker border
+  movePlayer?: 'player' | 'computer'; // Which player made the move at this cell
 }
 
 /**

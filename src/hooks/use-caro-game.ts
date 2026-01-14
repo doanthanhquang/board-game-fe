@@ -1,0 +1,247 @@
+/**
+ * Custom hook for Caro game logic
+ * Manages game state, moves, AI turns, and game flow
+ */
+
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import type { CaroGameState } from '@/types/game-state';
+import type { BoardCell } from '@/types/board';
+import { initializeGame, makeMove, resetGame } from '@/games/caro/caro-game';
+import { makeAIMove } from '@/games/caro/caro-ai';
+import { useTheme } from '@mui/material/styles';
+
+interface UseCaroGameProps {
+  width: number;
+  height: number;
+  enabled: boolean;
+}
+
+interface UseCaroGameReturn {
+  gameState: CaroGameState | null;
+  boardCells: BoardCell[][];
+  isAITurn: boolean;
+  handleCellClick: (row: number, col: number) => void;
+  handleReset: () => void;
+  getStatusMessage: () => string | null;
+  isGameEnded: boolean;
+}
+
+/**
+ * Custom hook for managing caro game state and logic
+ */
+export function useCaroGame({ width, height, enabled }: UseCaroGameProps): UseCaroGameReturn {
+  const theme = useTheme();
+  const [gameState, setGameState] = useState<CaroGameState | null>(null);
+  const [isAITurn, setIsAITurn] = useState(false);
+  const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | undefined>(
+    undefined
+  );
+  // Use ref to track gameState for AI turn without causing re-renders
+  const gameStateRef = useRef<CaroGameState | null>(null);
+  // Track if AI is processing to avoid duplicate triggers
+  const aiProcessingRef = useRef(false);
+
+  // Initialize game when enabled
+  useEffect(() => {
+    if (enabled) {
+      const initialState = initializeGame(width, height);
+      setGameState(initialState);
+      gameStateRef.current = initialState;
+      setSelectedCell(undefined);
+      setIsAITurn(false);
+      aiProcessingRef.current = false;
+    }
+  }, [enabled, width, height]);
+
+  // Update ref when gameState changes
+  useEffect(() => {
+    gameStateRef.current = gameState;
+  }, [gameState]);
+
+  // Handle AI turn
+  useEffect(() => {
+    // Only proceed if conditions are met
+    if (
+      !enabled ||
+      !gameState ||
+      gameState.currentPlayer !== 'computer' ||
+      gameState.gameStatus !== 'playing' ||
+      // isAITurn ||
+      aiProcessingRef.current
+    ) {
+      return;
+    }
+
+    // Mark AI as processing
+    aiProcessingRef.current = true;
+    // Set AI turn flag immediately
+    setIsAITurn(true);
+
+    // Add small delay for better UX
+    const timer = setTimeout(() => {
+      try {
+        // Get current board state from ref (most up-to-date)
+        const stateForMove = gameStateRef.current;
+        if (!stateForMove) {
+          console.error('No game state available for AI move');
+          setIsAITurn(false);
+          aiProcessingRef.current = false;
+          return;
+        }
+
+        // Double check it's still computer's turn
+        if (stateForMove.currentPlayer !== 'computer' || stateForMove.gameStatus !== 'playing') {
+          console.log('Game state changed, skipping AI move');
+          setIsAITurn(false);
+          aiProcessingRef.current = false;
+          return;
+        }
+
+        const aiMove = makeAIMove(stateForMove.board);
+
+        if (aiMove) {
+          const newState = makeMove(stateForMove, aiMove.row, aiMove.col);
+          if (newState) {
+            setGameState(newState);
+            gameStateRef.current = newState;
+          } else {
+            console.error('Failed to make AI move: invalid move');
+          }
+        } else {
+          console.error('No valid AI move available');
+        }
+      } catch (error) {
+        console.error('Error making AI move:', error);
+      } finally {
+        // Always reset AI turn flag and processing flag
+        setIsAITurn(false);
+        aiProcessingRef.current = false;
+      }
+    }, 500);
+
+    return () => {
+      clearTimeout(timer);
+      // Reset processing flag if effect is cleaned up
+      aiProcessingRef.current = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled, gameState?.currentPlayer, gameState?.gameStatus, isAITurn]);
+
+  // Handle cell click
+  const handleCellClick = useCallback(
+    (row: number, col: number) => {
+      if (!enabled || !gameState) return;
+
+      // Only allow moves during player's turn and when game is playing
+      if (gameState.currentPlayer === 'player' && gameState.gameStatus === 'playing' && !isAITurn) {
+        const newState = makeMove(gameState, row, col);
+        if (newState) {
+          setGameState(newState);
+          setSelectedCell(undefined);
+        }
+      }
+    },
+    [enabled, gameState, isAITurn]
+  );
+
+  // Handle game reset
+  const handleReset = useCallback(() => {
+    if (enabled) {
+      const newState = resetGame(width, height);
+      setGameState(newState);
+      setSelectedCell(undefined);
+      setIsAITurn(false);
+    }
+  }, [enabled, width, height]);
+
+  // Get game status message
+  const getStatusMessage = useCallback((): string | null => {
+    if (!enabled || !gameState) return null;
+
+    if (gameState.gameStatus === 'player-won') {
+      return '🎉 You won!';
+    }
+    if (gameState.gameStatus === 'computer-won') {
+      return '😔 Computer won!';
+    }
+    if (gameState.gameStatus === 'draw') {
+      return "It's a draw!";
+    }
+    if (isAITurn) {
+      return 'Computer is thinking...';
+    }
+    return gameState.currentPlayer === 'player' ? 'Your turn' : "Computer's turn";
+  }, [enabled, gameState, isAITurn]);
+
+  // Check if game is ended
+  const isGameEnded = useMemo(() => {
+    return gameState?.gameStatus !== 'playing';
+  }, [gameState]);
+
+  // Generate board cells from game state
+  const boardCells = useMemo<BoardCell[][]>(() => {
+    if (!enabled || !gameState) return [];
+
+    const cells: BoardCell[][] = [];
+    for (let row = 0; row < height; row++) {
+      cells[row] = [];
+      for (let col = 0; col < width; col++) {
+        const piece = gameState.board[row]?.[col];
+        // Set color based on piece - this color should NEVER change once set
+        let color: string | null = null;
+        let disabled = false;
+
+        // Color is determined by the piece on the board - permanent once set
+        let movePlayer: 'player' | 'computer' | undefined = undefined;
+        if (piece === 'player') {
+          // Player pieces are always primary color (blue)
+          color = theme.palette.primary.main;
+          movePlayer = 'player';
+          disabled = true;
+        } else if (piece === 'computer') {
+          // Computer pieces are always error color (red)
+          color = theme.palette.error.main;
+          movePlayer = 'computer';
+          disabled = true;
+        }
+        // If piece is null, color remains null (transparent)
+
+        // Disable cells if game ended or during AI turn
+        if (
+          gameState.gameStatus !== 'playing' ||
+          isAITurn ||
+          gameState.currentPlayer === 'computer'
+        ) {
+          disabled = true;
+        }
+
+        // Check if this is the last move (for extra highlight)
+        const isLastMove = gameState.lastMove?.row === row && gameState.lastMove?.col === col;
+
+        // Only show selected state for empty cells (no piece)
+        const isSelected = selectedCell?.row === row && selectedCell?.col === col && !piece;
+
+        cells[row][col] = {
+          row,
+          col,
+          color, // This color is permanent for cells with pieces
+          selected: isSelected,
+          disabled,
+          isLastMove, // Extra highlight for last move
+          movePlayer, // Track which player made the move for border color
+        };
+      }
+    }
+    return cells;
+  }, [enabled, gameState, selectedCell, isAITurn, width, height, theme]);
+
+  return {
+    gameState,
+    boardCells,
+    isAITurn,
+    handleCellClick,
+    handleReset,
+    getStatusMessage,
+    isGameEnded,
+  };
+}
