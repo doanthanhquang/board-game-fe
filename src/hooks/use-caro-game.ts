@@ -15,6 +15,7 @@ interface UseCaroGameProps {
   height: number;
   enabled: boolean;
   playerIcon?: 'X' | 'O'; // Player's icon choice
+  targetInRow?: number; // Number of pieces in a row needed to win (default: 4)
 }
 
 interface UseCaroGameReturn {
@@ -40,6 +41,7 @@ export function useCaroGame({
   height,
   enabled,
   playerIcon = 'X',
+  targetInRow = 4,
 }: UseCaroGameProps): UseCaroGameReturn {
   const theme = useTheme();
   const [gameState, setGameState] = useState<CaroGameState | null>(null);
@@ -114,7 +116,7 @@ export function useCaroGame({
         const aiMove = makeAIMove(stateForMove.board);
 
         if (aiMove) {
-          const newState = makeMove(stateForMove, aiMove.row, aiMove.col);
+          const newState = makeMove(stateForMove, aiMove.row, aiMove.col, targetInRow);
           if (newState) {
             setGameState(newState);
             gameStateRef.current = newState;
@@ -148,7 +150,7 @@ export function useCaroGame({
 
       // Only allow moves during player's turn and when game is playing
       if (gameState.currentPlayer === 'player' && gameState.gameStatus === 'playing' && !isAITurn) {
-        const newState = makeMove(gameState, row, col);
+        const newState = makeMove(gameState, row, col, targetInRow);
         if (newState) {
           setGameState(newState);
           setSelectedCell(undefined);

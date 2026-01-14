@@ -54,7 +54,8 @@ export const GameDetail = () => {
   const [scoreSubmitted, setScoreSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const isCaroGame = game?.slug === 'caro-4';
+  const isCaroGame = game?.slug === 'caro-4' || game?.slug === 'caro-5';
+  const targetInRow = game?.slug === 'caro-5' ? 5 : 4;
   const shouldContinue = searchParams.get('continue') === '1';
 
   // Use caro game hook
@@ -63,6 +64,7 @@ export const GameDetail = () => {
     height: game?.default_board_height || 0,
     enabled: isCaroGame && !showIconSelector,
     playerIcon: playerIcon,
+    targetInRow: targetInRow,
   });
 
   // Live player score (number of player moves in current game)
@@ -452,25 +454,13 @@ export const GameDetail = () => {
     <Container maxWidth="lg">
       <Box sx={{ mt: 4, mb: 4 }}>
         <Paper elevation={3} sx={{ padding: 4 }}>
-          <Box sx={{ mb: 3 }}>
-            <Button
-              variant="outlined"
-              startIcon={<ArrowBackIcon />}
-              onClick={handleBackToDashboard}
-              sx={{ mb: 2 }}
-            >
-              Quay lại trang chính
-            </Button>
-          </Box>
-
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-            <Typography variant="h3" component="h1">
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="h5" component="h1">
               {game.name}
             </Typography>
             <IconButton
               color="primary"
               onClick={handleToggleInstructions}
-              sx={{ ml: 1 }}
               aria-label="Show game instructions"
             >
               <HelpIcon />
@@ -502,21 +492,33 @@ export const GameDetail = () => {
                   >
                     {saving ? 'Đang lưu...' : 'Lưu ván'}
                   </Button>
+
+                  {caroGame.isGameEnded && (
+                    <>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={<RefreshIcon />}
+                        onClick={handleNewGameFromResult}
+                      >
+                        New Game
+                      </Button>
+
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={<ArrowBackIcon />}
+                        onClick={handleBackToDashboard}
+                      >
+                        Quay lại
+                      </Button>
+                    </>
+                  )}
                 </Box>
                 {saveError && (
                   <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
                     {saveError}
                   </Typography>
-                )}
-                {caroGame.isGameEnded && (
-                  <Button
-                    variant="contained"
-                    startIcon={<RefreshIcon />}
-                    onClick={handleNewGameFromResult}
-                    sx={{ mt: 1 }}
-                  >
-                    New Game
-                  </Button>
                 )}
               </Box>
             )}

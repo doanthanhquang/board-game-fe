@@ -1,4 +1,4 @@
-import { Box } from '@mui/material';
+import { Box, useMediaQuery, useTheme } from '@mui/material';
 import { BoardCell } from './board-cell';
 import type { GameBoardProps } from '@/types/board';
 
@@ -13,12 +13,26 @@ export const GameBoard = ({
   onCellClick,
   disabled = false,
 }: GameBoardProps) => {
+  const theme = useTheme();
+  const isXsDown = useMediaQuery(theme.breakpoints.down('sm'));
+  const isSmDown = useMediaQuery(theme.breakpoints.down('md'));
+
   // Calculate cell size based on container and board dimensions
+  // Make cells smaller on small screens so the board fits better
   const maxCellSize = 50;
-  const minCellSize = 30;
+  const minCellSize = 20;
+
+  let maxBoardPixels = 600;
+  if (isSmDown) {
+    maxBoardPixels = 480;
+  }
+  if (isXsDown) {
+    maxBoardPixels = 320;
+  }
+
   const cellSize = Math.max(
     minCellSize,
-    Math.min(maxCellSize, Math.floor(600 / Math.max(width, height)))
+    Math.min(maxCellSize, Math.floor(maxBoardPixels / Math.max(width, height)))
   );
 
   const gap = 4; // Gap between cells

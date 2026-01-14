@@ -13,6 +13,10 @@ export const AppHeader = () => {
     navigate('/login');
   };
 
+  const handleGoToDashboard = () => {
+    navigate('/dashboard');
+  };
+
   if (!isAuthenticated) {
     return null;
   }
@@ -20,7 +24,12 @@ export const AppHeader = () => {
   return (
     <AppBar position="static">
       <Toolbar sx={{ justifyContent: 'space-between' }}>
-        <Typography variant="h6" component="div">
+        <Typography
+          variant="h6"
+          component="div"
+          onClick={handleGoToDashboard}
+          sx={{ cursor: 'pointer' }}
+        >
           Board Game
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>

@@ -49,9 +49,15 @@ export function isValidMove(board: (Player | null)[][], row: number, col: number
  * @param gameState - Current game state
  * @param row - Row index
  * @param col - Column index
+ * @param targetInRow - Number of pieces in a row needed to win (default: 4)
  * @returns Updated game state or null if move is invalid
  */
-export function makeMove(gameState: CaroGameState, row: number, col: number): CaroGameState | null {
+export function makeMove(
+  gameState: CaroGameState,
+  row: number,
+  col: number,
+  targetInRow: number = 4
+): CaroGameState | null {
   // Check if game is still playing
   if (gameState.gameStatus !== 'playing') {
     return null;
@@ -74,7 +80,7 @@ export function makeMove(gameState: CaroGameState, row: number, col: number): Ca
   };
 
   // Check win condition
-  const hasWon = checkWin(newBoard, row, col, gameState.currentPlayer, 4);
+  const hasWon = checkWin(newBoard, row, col, gameState.currentPlayer, targetInRow);
 
   let newGameStatus: GameStatus = 'playing';
   let winner: Player | null = null;
