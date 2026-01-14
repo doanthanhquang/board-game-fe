@@ -1,5 +1,5 @@
-import apiClient from './client';
-import type { QueryParams, RequestConfig } from './types';
+import apiClient from '@/api/client';
+import type { QueryParams, RequestConfig } from '@/api/types';
 
 /**
  * HTTP GET request
@@ -128,4 +128,4 @@ export { apiClient };
 /**
  * Export types
  */
-export type { ApiResponse, ApiError, RequestConfig, QueryParams } from './types';
+export type { ApiResponse, ApiError, RequestConfig, QueryParams } from '@/api/types';

@@ -23,9 +23,7 @@ export interface ApiError {
 /**
  * Extended request configuration options
  */
-export interface RequestConfig extends AxiosRequestConfig {
-  // Add custom configuration options here if needed
-}
+export type RequestConfig = AxiosRequestConfig;
 
 /**
  * Query parameters type for GET requests

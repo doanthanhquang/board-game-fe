@@ -4,7 +4,7 @@ import axios, {
   type InternalAxiosRequestConfig,
   type AxiosResponse,
 } from 'axios';
-import type { ApiError } from './types';
+import type { ApiError } from '@/api/types';
 
 /**
  * Create and configure the Axios instance
@@ -22,7 +22,7 @@ const apiClient: AxiosInstance = axios.create({
  */
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Get token from localStorage (adjust based on your auth strategy)
+    // Get token from localStorage
     const token = localStorage.getItem('auth_token');
 
     if (token && config.headers) {

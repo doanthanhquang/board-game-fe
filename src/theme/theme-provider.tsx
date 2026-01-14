@@ -1,16 +1,8 @@
-import { createContext, useState, useEffect, ReactNode } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
-import { lightTheme, darkTheme } from './themes';
-
-export type ThemeMode = 'light' | 'dark';
-
-export interface ThemeContextType {
-  mode: ThemeMode;
-  toggleTheme: () => void;
-}
-
-export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+import { lightTheme, darkTheme } from '@/theme/themes';
+import { ThemeContext, type ThemeMode } from '@/theme/theme-context';
 
 const THEME_STORAGE_KEY = 'theme-preference';
 
