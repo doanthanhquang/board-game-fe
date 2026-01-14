@@ -107,7 +107,7 @@ export interface LoadGameSaveResponse {
     save_name: string;
     created_at: string;
     updated_at: string;
-    game_state: CaroGameState;
+    game_state: CaroGameState | TicTacToeGameState;
   };
 }
 
@@ -182,7 +182,10 @@ export const listGameSaves = async (slug: string): Promise<GameSaveSummary[]> =>
 /**
  * Load a saved game state
  */
-export const loadGameSave = async (slug: string, saveId: string): Promise<CaroGameState> => {
+export const loadGameSave = async (
+  slug: string,
+  saveId: string
+): Promise<CaroGameState | TicTacToeGameState> => {
   const response = await get<LoadGameSaveResponse>(`/games/${slug}/saves/${saveId}`);
   return response.data.game_state;
 };

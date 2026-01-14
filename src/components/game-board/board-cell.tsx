@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { IconButton, Tooltip, useTheme, Typography } from '@mui/material';
+import { IconButton, useTheme, Typography } from '@mui/material';
 import type { BoardCell as BoardCellType } from '@/types/board';
 
 interface BoardCellProps {
@@ -84,33 +84,31 @@ export const BoardCell = memo(({ cell, onClick, size = 40 }: BoardCellProps) => 
   };
 
   return (
-    <Tooltip title={cell.disabled ? 'Disabled' : `Row ${cell.row + 1}, Col ${cell.col + 1}`}>
-      <span style={{ display: 'inline-block' }}>
-        <IconButton
-          onClick={handleClick}
-          disabled={cell.disabled}
-          sx={cellStyle}
-          aria-label={`Cell at row ${cell.row + 1}, column ${cell.col + 1}`}
-        >
-          {cell.icon && (
-            <Typography
-              variant="h5"
-              component="span"
-              sx={{
-                fontWeight: 'bold',
-                color:
-                  cell.movePlayer === 'player'
-                    ? theme.palette.primary.main
-                    : theme.palette.error.main,
-                userSelect: 'none',
-              }}
-            >
-              {cell.icon}
-            </Typography>
-          )}
-        </IconButton>
-      </span>
-    </Tooltip>
+    <span style={{ display: 'inline-block' }}>
+      <IconButton
+        onClick={handleClick}
+        disabled={cell.disabled}
+        sx={cellStyle}
+        aria-label={`Cell at row ${cell.row + 1}, column ${cell.col + 1}`}
+      >
+        {cell.icon && (
+          <Typography
+            variant="h5"
+            component="span"
+            sx={{
+              fontWeight: 'bold',
+              color:
+                cell.movePlayer === 'player'
+                  ? theme.palette.primary.main
+                  : theme.palette.error.main,
+              userSelect: 'none',
+            }}
+          >
+            {cell.icon}
+          </Typography>
+        )}
+      </IconButton>
+    </span>
   );
 });
 

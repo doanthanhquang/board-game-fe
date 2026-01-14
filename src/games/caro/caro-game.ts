@@ -4,7 +4,7 @@
  */
 
 import type { CaroGameState, Player, GameStatus, Move } from '@/types/game-state';
-import { checkWin, isBoardFull } from './caro-win-checker';
+import { checkWin, isBoardFull } from '@/games/caro/caro-win-checker';
 
 /**
  * Initialize a new caro game

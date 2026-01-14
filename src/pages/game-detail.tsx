@@ -10,15 +10,6 @@ import {
   Alert,
   Snackbar,
   IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Radio,
-  RadioGroup,
-  FormControlLabel,
-  FormControl,
-  FormLabel,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import HelpIcon from '@mui/icons-material/Help';
@@ -34,10 +25,12 @@ import {
   clearGameSaves,
 } from '@/api/games';
 import { GameBoard, FunctionButtons } from '@/components/game-board';
-import { GameResultDialog } from '@/components/game-result-dialog';
+import { GameResultDialog, GameInstructionsDialog, GameIconSelectorDialog } from '@/components';
 import type { BoardCell } from '@/types/board';
 import { useCaroGame } from '@/hooks/use-caro-game';
 import { useTicTacToeGame } from '@/hooks/use-tic-tac-toe-game';
+import type { CaroGameState } from '@/types/game-state';
+import type { TicTacToeGameState } from '@/games/tic-tac-toe/tic-tac-toe-game';
 
 export const GameDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -277,7 +270,7 @@ export const GameDetail = () => {
         }
 
         const latest = items[0];
-        const state = await loadGameSave(slug, latest.id);
+        const state = (await loadGameSave(slug, latest.id)) as CaroGameState;
 
         // Only allow continue when game is still in progress
         if (state.gameStatus !== 'playing') {
@@ -299,6 +292,41 @@ export const GameDetail = () => {
     void tryContinue();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shouldContinue, isCaroGame, slug]);
+
+  // Auto-continue from latest saved game for Tic-Tac-Toe
+  useEffect(() => {
+    const tryContinueTicTacToe = async () => {
+      if (!shouldContinue || !isTicTacToeGame || !slug) return;
+
+      try {
+        const items = await listGameSaves(slug);
+        if (!items || items.length === 0) {
+          navigate(`/game/${slug}`, { replace: true });
+          return;
+        }
+
+        const latest = items[0];
+        const state = (await loadGameSave(slug, latest.id)) as TicTacToeGameState;
+
+        if (state.status !== 'playing') {
+          navigate(`/game/${slug}`, { replace: true });
+          return;
+        }
+
+        ticTacToeGame.restoreState(state);
+        setShowIconSelector(false);
+        setShowResultDialog(false);
+        setScoreSubmitted(false);
+        setSelectedCell(undefined);
+        setHasChosenIcon(true);
+      } catch {
+        navigate(`/game/${slug}`, { replace: true });
+      }
+    };
+
+    void tryContinueTicTacToe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldContinue, isTicTacToeGame, slug]);
 
   // Show result dialog when Caro game ends
   useEffect(() => {
@@ -332,8 +360,29 @@ export const GameDetail = () => {
       // Ignore score errors in UI
     });
 
+    // Clear saves when player wins so user cannot continue a finished match
+    clearGameSaves(slug).catch(() => {
+      // Ignore clear errors in UI
+    });
+
     setScoreSubmitted(true);
   }, [isTicTacToeGame, game, ticTacToeGame.gameState, scoreSubmitted, slug, playerIcon]);
+
+  // Clear saves when Tic-Tac-Toe game ends (computer win or draw)
+  useEffect(() => {
+    if (!isTicTacToeGame || !slug || !ticTacToeGame.gameState) return;
+    const status = ticTacToeGame.gameState.status;
+    // Clear saves when computer wins or draw (player win is handled above)
+    if (
+      status === 'draw' ||
+      (status === 'x-won' && playerIcon === 'O') ||
+      (status === 'o-won' && playerIcon === 'X')
+    ) {
+      clearGameSaves(slug).catch(() => {
+        // Ignore clear errors in UI
+      });
+    }
+  }, [isTicTacToeGame, slug, ticTacToeGame.gameState, playerIcon]);
 
   const handleBackToDashboard = () => {
     navigate('/dashboard');
@@ -707,91 +756,23 @@ export const GameDetail = () => {
         </Paper>
       </Box>
 
-      <Dialog open={showInstructions} onClose={handleToggleInstructions} maxWidth="md" fullWidth>
-        <DialogTitle>Hướng dẫn trò chơi</DialogTitle>
-        <DialogContent>
-          <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-line' }}>
-            {game.instructions || 'Chưa có hướng dẫn cho trò chơi này.'}
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleToggleInstructions} variant="contained">
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <GameInstructionsDialog
+        open={showInstructions}
+        instructions={game.instructions}
+        onClose={handleToggleInstructions}
+      />
 
       {/* Icon Selector Dialog for games with X/O selection (Caro, Tic-Tac-Toe) */}
       {(isCaroGame || isTicTacToeGame) && (
-        <Dialog
+        <GameIconSelectorDialog
           open={showIconSelector}
-          onClose={() => {}} // Prevent closing without selection
-          maxWidth="sm"
-          fullWidth
-          PaperProps={{
-            sx: {
-              borderRadius: 2,
-            },
+          playerIcon={playerIcon}
+          onChangePlayerIcon={(icon: 'X' | 'O') => setPlayerIcon(icon)}
+          onStart={() => {
+            setHasChosenIcon(true);
+            setShowIconSelector(false);
           }}
-        >
-          <DialogTitle>
-            <Typography variant="h5" component="div" fontWeight="bold">
-              Chọn Icon của bạn
-            </Typography>
-          </DialogTitle>
-          <DialogContent>
-            <FormControl component="fieldset" sx={{ width: '100%', mt: 2 }}>
-              <FormLabel component="legend">Bạn muốn chơi với icon nào?</FormLabel>
-              <RadioGroup
-                row
-                value={playerIcon}
-                onChange={(e) => setPlayerIcon(e.target.value as 'X' | 'O')}
-                sx={{ justifyContent: 'center', mt: 2, gap: 4 }}
-              >
-                <FormControlLabel
-                  value="X"
-                  control={<Radio />}
-                  label={
-                    <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-                      X
-                    </Typography>
-                  }
-                />
-                <FormControlLabel
-                  value="O"
-                  control={<Radio />}
-                  label={
-                    <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'error.main' }}>
-                      O
-                    </Typography>
-                  }
-                />
-              </RadioGroup>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ mt: 2, textAlign: 'center' }}
-              >
-                {playerIcon === 'X'
-                  ? 'Bạn sẽ chơi X, Computer sẽ chơi O'
-                  : 'Bạn sẽ chơi O, Computer sẽ chơi X'}
-              </Typography>
-            </FormControl>
-          </DialogContent>
-          <DialogActions sx={{ justifyContent: 'center', pb: 3, px: 3 }}>
-            <Button
-              variant="contained"
-              onClick={() => {
-                setHasChosenIcon(true);
-                setShowIconSelector(false);
-              }}
-              size="large"
-              sx={{ minWidth: 120 }}
-            >
-              Bắt đầu
-            </Button>
-          </DialogActions>
-        </Dialog>
+        />
       )}
 
       {/* Game Result Dialog - Common component for all games */}

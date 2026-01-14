@@ -19,6 +19,7 @@ interface UseTicTacToeGameReturn {
   handleReset: () => void;
   getStatusMessage: () => string | null;
   isGameEnded: boolean;
+  restoreState: (state: TicTacToeGameState) => void;
 }
 
 export function useTicTacToeGame({
@@ -64,6 +65,14 @@ export function useTicTacToeGame({
     const reset = resetTicTacToeGame();
     setGameState(reset);
   }, [enabled]);
+
+  const restoreState = useCallback(
+    (state: TicTacToeGameState) => {
+      if (!enabled) return;
+      setGameState(state);
+    },
+    [enabled]
+  );
 
   // Simple AI: when it's computer's turn, automatically pick a random empty cell
   useEffect(() => {
@@ -168,5 +177,6 @@ export function useTicTacToeGame({
     handleReset,
     getStatusMessage,
     isGameEnded,
+    restoreState,
   };
 }

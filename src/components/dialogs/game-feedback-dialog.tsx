@@ -43,10 +43,7 @@ export const GameFeedbackDialog = ({ open, slug, gameName, onClose }: GameFeedba
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   useEffect(() => {
-    if (!open) {
-      return;
-    }
-    if (!slug) {
+    if (!open || !slug) {
       return;
     }
     const fetchRatings = async () => {
@@ -64,7 +61,7 @@ export const GameFeedbackDialog = ({ open, slug, gameName, onClose }: GameFeedba
         setLoadingList(false);
       }
     };
-    fetchRatings();
+    void fetchRatings();
   }, [open, slug, page, pageSize]);
 
   const resetForm = () => {

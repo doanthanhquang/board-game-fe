@@ -1,5 +1,5 @@
 import { Box, useMediaQuery, useTheme } from '@mui/material';
-import { BoardCell } from './board-cell';
+import { BoardCell } from '@/components/game-board/board-cell';
 import type { GameBoardProps } from '@/types/board';
 
 /**
