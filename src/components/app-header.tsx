@@ -2,6 +2,7 @@ import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useAuth } from '@/context/use-auth';
 import { useNavigate } from 'react-router-dom';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export const AppHeader = () => {
   const { currentUser, logout, isAuthenticated } = useAuth();
@@ -28,6 +29,7 @@ export const AppHeader = () => {
               Welcome, {currentUser.username}
             </Typography>
           )}
+          <ThemeToggle />
           <Button color="inherit" startIcon={<LogoutIcon />} onClick={handleLogout} sx={{ ml: 1 }}>
             Logout
           </Button>

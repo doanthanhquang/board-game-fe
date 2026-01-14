@@ -36,7 +36,7 @@ interface ThemeProviderProps {
 export const ThemeProvider = ({ children }: ThemeProviderProps) => {
   const [mode, setMode] = useState<ThemeMode>(getInitialTheme);
 
-  // Sync dark class with theme mode for Tailwind
+  // Sync dark class with theme mode
   useEffect(() => {
     const root = document.documentElement;
     if (mode === 'dark') {
