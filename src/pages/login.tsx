@@ -12,6 +12,7 @@ import {
   IconButton,
   Alert,
   CircularProgress,
+  Snackbar,
 } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useAuth } from '@/context/use-auth';
@@ -28,6 +29,7 @@ export const Login = () => {
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [isEmail, setIsEmail] = useState(true);
+  const [successToastOpen, setSuccessToastOpen] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -67,7 +69,11 @@ export const Login = () => {
       };
 
       await login(credentials);
-      navigate('/dashboard');
+      setSuccessToastOpen(true);
+      // Chờ một chút để người dùng kịp thấy toast rồi chuyển sang dashboard
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 800);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Đăng nhập thất bại. Vui lòng thử lại.');
     } finally {
@@ -176,9 +182,29 @@ export const Login = () => {
             >
               {loading ? <CircularProgress size={24} /> : 'Đăng nhập'}
             </Button>
+
+            <Button
+              fullWidth
+              variant="text"
+              sx={{ textTransform: 'none' }}
+              onClick={() => navigate('/register')}
+              disabled={loading}
+            >
+              Chưa có tài khoản? Đăng ký
+            </Button>
           </Box>
         </Paper>
       </Box>
+      <Snackbar
+        open={successToastOpen}
+        autoHideDuration={3000}
+        onClose={() => setSuccessToastOpen(false)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={() => setSuccessToastOpen(false)} severity="success" sx={{ width: '100%' }}>
+          Đăng nhập thành công!
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };

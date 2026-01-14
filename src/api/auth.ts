@@ -42,6 +42,18 @@ export interface ApiErrorResponse {
   message: string;
 }
 
+export interface RegisterRequest {
+  email: string;
+  username: string;
+  password: string;
+}
+
+export interface RegisterResponse {
+  success: boolean;
+  user?: User;
+  message?: string;
+}
+
 /**
  * Login user with email/username and password
  * @param credentials - Login credentials
@@ -58,5 +70,23 @@ export const login = async (credentials: LoginRequest): Promise<LoginResponse> =
       throw new Error(String(error.message));
     }
     throw new Error('Login failed. Please try again.');
+  }
+};
+
+/**
+ * Register a new client user
+ * @param payload - Registration data
+ * @returns Promise resolving to register response
+ * @throws Error if registration fails
+ */
+export const register = async (payload: RegisterRequest): Promise<RegisterResponse> => {
+  try {
+    const response = await post<RegisterResponse, RegisterRequest>('/auth/register', payload);
+    return response;
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'message' in error) {
+      throw new Error(String(error.message));
+    }
+    throw new Error('Registration failed. Please try again.');
   }
 };
