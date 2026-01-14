@@ -41,13 +41,19 @@ export const GameMenuDialog = ({
   onShowInstructions,
 }: GameMenuDialogProps) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const menuItemsRef = useRef<(HTMLDivElement | null)[]>([]);
-  
+  const menuItemsRef = useRef<(HTMLLIElement | null)[]>([]);
+
   // Menu items configuration
   const menuItems = [
     { id: 'continue', label: 'Continue', icon: PlayArrowIcon, disabled: true, action: null },
     { id: 'new-game', label: 'New Game', icon: RefreshIcon, disabled: false, action: 'newGame' },
-    { id: 'instruction', label: 'Instruction', icon: HelpIcon, disabled: false, action: 'instruction' },
+    {
+      id: 'instruction',
+      label: 'Instruction',
+      icon: HelpIcon,
+      disabled: false,
+      action: 'instruction',
+    },
     { id: 'ranking', label: 'Ranking', icon: EmojiEventsIcon, disabled: true, action: null },
     { id: 'comment', label: 'Comment', icon: CommentIcon, disabled: true, action: null },
   ];
@@ -55,7 +61,9 @@ export const GameMenuDialog = ({
   // Reset selected index when dialog opens
   useEffect(() => {
     if (open) {
-      setSelectedIndex(0);
+      setTimeout(() => {
+        setSelectedIndex(0);
+      }, 0);
     }
   }, [open]);
 
@@ -94,6 +102,14 @@ export const GameMenuDialog = ({
 
   const handleRight = () => {
     // Not used in menu
+  };
+
+  const handleUp = () => {
+    setSelectedIndex((prev) => (prev > 0 ? prev - 1 : menuItems.length - 1));
+  };
+
+  const handleDown = () => {
+    setSelectedIndex((prev) => (prev < menuItems.length - 1 ? prev + 1 : 0));
   };
 
   const handleEnter = () => {
@@ -163,11 +179,7 @@ export const GameMenuDialog = ({
             const isDisabled = item.disabled;
 
             return (
-              <Tooltip
-                key={item.id}
-                title={isDisabled ? 'Coming Soon' : ''}
-                placement="right"
-              >
+              <Tooltip key={item.id} title={isDisabled ? 'Coming Soon' : ''} placement="right">
                 <span>
                   <ListItem
                     disablePadding
@@ -213,12 +225,16 @@ export const GameMenuDialog = ({
         <FunctionButtons
           onLeft={handleLeft}
           onRight={handleRight}
+          onUp={handleUp}
+          onDown={handleDown}
           onEnter={handleEnter}
           onBack={handleBack}
           onHint={handleHint}
           disabled={{
             left: true,
             right: true,
+            up: false,
+            down: false,
             enter: false,
             back: false,
             hint: false,

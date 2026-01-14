@@ -88,6 +88,41 @@ export const Dashboard = () => {
     }
   };
 
+  const handleUp = () => {
+    if (games.length > 0 && !showMenuDialog && !showInstructions) {
+      // Move to previous row (assuming 2 columns grid)
+      const currentRow = Math.floor(selectedGameIndex / 2);
+      const currentCol = selectedGameIndex % 2;
+      if (currentRow > 0) {
+        const newIndex = (currentRow - 1) * 2 + currentCol;
+        setSelectedGameIndex(newIndex);
+      } else {
+        // Wrap to last row
+        const totalRows = Math.ceil(games.length / 2);
+        const newIndex = (totalRows - 1) * 2 + currentCol;
+        setSelectedGameIndex(Math.min(newIndex, games.length - 1));
+      }
+    }
+  };
+
+  const handleDown = () => {
+    if (games.length > 0 && !showMenuDialog && !showInstructions) {
+      // Move to next row (assuming 2 columns grid)
+      const currentRow = Math.floor(selectedGameIndex / 2);
+      const currentCol = selectedGameIndex % 2;
+      const totalRows = Math.ceil(games.length / 2);
+      if (currentRow < totalRows - 1) {
+        const newIndex = (currentRow + 1) * 2 + currentCol;
+        if (newIndex < games.length) {
+          setSelectedGameIndex(newIndex);
+        }
+      } else {
+        // Wrap to first row
+        setSelectedGameIndex(currentCol);
+      }
+    }
+  };
+
   const handleEnter = () => {
     if (games.length > 0 && !showMenuDialog && !showInstructions) {
       const game = games[selectedGameIndex];
@@ -224,12 +259,16 @@ export const Dashboard = () => {
                 <FunctionButtons
                   onLeft={handleLeft}
                   onRight={handleRight}
+                  onUp={handleUp}
+                  onDown={handleDown}
                   onEnter={handleEnter}
                   onBack={handleBack}
                   onHint={handleHint}
                   disabled={{
                     left: showMenuDialog || showInstructions,
                     right: showMenuDialog || showInstructions,
+                    up: showMenuDialog || showInstructions,
+                    down: showMenuDialog || showInstructions,
                     enter: showMenuDialog || showInstructions,
                     back: !showMenuDialog && !showInstructions,
                     hint: showMenuDialog || showInstructions,

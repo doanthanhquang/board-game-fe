@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { IconButton, Tooltip, useTheme } from '@mui/material';
+import { IconButton, Tooltip, useTheme, Typography } from '@mui/material';
 import type { BoardCell as BoardCellType } from '@/types/board';
 
 interface BoardCellProps {
@@ -20,11 +20,12 @@ export const BoardCell = memo(({ cell, onClick, size = 40 }: BoardCellProps) => 
     }
   };
 
-  // Determine if cell has a piece (permanent color)
-  const hasPiece = cell.color !== null;
+  // Determine if cell has a piece or icon (permanent content)
+  const hasIcon = !!cell.icon;
+  const hasPiece = cell.color !== null || hasIcon;
 
-  // Ensure color is always preserved for cells with pieces
-  const backgroundColor = hasPiece ? cell.color : 'transparent';
+  // For caro (with icon), keep background transparent so X/O nổi bật hơn
+  const backgroundColor = hasIcon ? 'transparent' : cell.color || 'transparent';
 
   // Determine border color based on move player
   const getBorderColor = () => {
@@ -56,8 +57,8 @@ export const BoardCell = memo(({ cell, onClick, size = 40 }: BoardCellProps) => 
     minWidth: size,
     minHeight: size,
     borderRadius: '50%',
-    // Always keep the piece color if it exists - never change it
-    backgroundColor: backgroundColor,
+    // Background color (transparent when showing X/O icon)
+    backgroundColor,
     border: cell.isLastMove
       ? '4px solid' // Thicker border for last move
       : cell.selected && !hasPiece
@@ -89,7 +90,24 @@ export const BoardCell = memo(({ cell, onClick, size = 40 }: BoardCellProps) => 
         disabled={cell.disabled}
         sx={cellStyle}
         aria-label={`Cell at row ${cell.row + 1}, column ${cell.col + 1}`}
-      />
+      >
+        {cell.icon && (
+          <Typography
+            variant="h5"
+            component="span"
+            sx={{
+              fontWeight: 'bold',
+              color:
+                cell.movePlayer === 'player'
+                  ? theme.palette.primary.main
+                  : theme.palette.error.main,
+              userSelect: 'none',
+            }}
+          >
+            {cell.icon}
+          </Typography>
+        )}
+      </IconButton>
     </Tooltip>
   );
 });

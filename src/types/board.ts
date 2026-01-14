@@ -6,6 +6,7 @@ export interface BoardCell {
   disabled?: boolean;
   isLastMove?: boolean; // Highlight last move with thicker border
   movePlayer?: 'player' | 'computer'; // Which player made the move at this cell
+  icon?: 'X' | 'O' | null; // Icon for caro game (X or O)
 }
 
 /**
@@ -41,12 +42,16 @@ export interface GameBoardProps {
 export interface FunctionButtonsProps {
   onLeft?: FunctionButtonAction;
   onRight?: FunctionButtonAction;
+  onUp?: FunctionButtonAction;
+  onDown?: FunctionButtonAction;
   onEnter?: FunctionButtonAction;
   onBack?: FunctionButtonAction;
   onHint?: FunctionButtonAction;
   disabled?: {
     left?: boolean;
     right?: boolean;
+    up?: boolean;
+    down?: boolean;
     enter?: boolean;
     back?: boolean;
     hint?: boolean;

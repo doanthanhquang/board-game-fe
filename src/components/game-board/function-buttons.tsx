@@ -3,6 +3,8 @@ import { Box, Button, Tooltip } from '@mui/material';
 import {
   ArrowBack as LeftIcon,
   ArrowForward as RightIcon,
+  ArrowUpward as UpIcon,
+  ArrowDownward as DownIcon,
   KeyboardReturn as EnterIcon,
   ArrowBack as BackIcon,
   Help as HintIcon,
@@ -10,11 +12,13 @@ import {
 import type { FunctionButtonsProps } from '@/types/board';
 
 /**
- * FunctionButtons component - renders 5 function buttons with keyboard shortcuts
+ * FunctionButtons component - renders 7 function buttons with keyboard shortcuts
  */
 export const FunctionButtons = ({
   onLeft,
   onRight,
+  onUp,
+  onDown,
   onEnter,
   onBack,
   onHint,
@@ -39,6 +43,18 @@ export const FunctionButtons = ({
           if (!disabled.right && onRight) {
             event.preventDefault();
             onRight();
+          }
+          break;
+        case 'ArrowUp':
+          if (!disabled.up && onUp) {
+            event.preventDefault();
+            onUp();
+          }
+          break;
+        case 'ArrowDown':
+          if (!disabled.down && onDown) {
+            event.preventDefault();
+            onDown();
           }
           break;
         case 'Enter':
@@ -67,7 +83,7 @@ export const FunctionButtons = ({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [onLeft, onRight, onEnter, onBack, onHint, disabled]);
+  }, [onLeft, onRight, onUp, onDown, onEnter, onBack, onHint, disabled]);
 
   const buttons = [
     {
@@ -85,6 +101,22 @@ export const FunctionButtons = ({
       disabled: disabled.right,
       shortcut: '→',
       tooltip: 'Navigate right (Arrow Right)',
+    },
+    {
+      label: 'Up',
+      icon: <UpIcon />,
+      onClick: onUp,
+      disabled: disabled.up,
+      shortcut: '↑',
+      tooltip: 'Navigate up (Arrow Up)',
+    },
+    {
+      label: 'Down',
+      icon: <DownIcon />,
+      onClick: onDown,
+      disabled: disabled.down,
+      shortcut: '↓',
+      tooltip: 'Navigate down (Arrow Down)',
     },
     {
       label: 'ENTER',
@@ -117,10 +149,10 @@ export const FunctionButtons = ({
       sx={{
         display: 'flex',
         justifyContent: 'center',
-        gap: 2,
+        gap: 1,
         flexWrap: 'wrap',
-        mt: 3,
-        mb: 2,
+        mt: 2,
+        mb: 1.5,
       }}
     >
       {buttons.map((button) => (
@@ -132,8 +164,18 @@ export const FunctionButtons = ({
               onClick={button.onClick}
               disabled={button.disabled}
               sx={{
-                minWidth: 120,
+                minWidth: { xs: 96, sm: 104 },
+                px: 1.25,
+                py: 0.75,
+                fontSize: { xs: '0.75rem', sm: '0.8rem' },
+                lineHeight: 1.1,
                 textTransform: 'none',
+                '& .MuiButton-startIcon': {
+                  mr: 0.75,
+                  '& > *:nth-of-type(1)': {
+                    fontSize: 18,
+                  },
+                },
               }}
             >
               {button.label}

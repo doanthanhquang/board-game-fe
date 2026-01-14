@@ -14,6 +14,7 @@ interface UseCaroGameProps {
   width: number;
   height: number;
   enabled: boolean;
+  playerIcon?: 'X' | 'O'; // Player's icon choice
 }
 
 interface UseCaroGameReturn {
@@ -24,12 +25,19 @@ interface UseCaroGameReturn {
   handleReset: () => void;
   getStatusMessage: () => string | null;
   isGameEnded: boolean;
+  playerIcon: 'X' | 'O' | undefined;
+  computerIcon: 'X' | 'O' | undefined;
 }
 
 /**
  * Custom hook for managing caro game state and logic
  */
-export function useCaroGame({ width, height, enabled }: UseCaroGameProps): UseCaroGameReturn {
+export function useCaroGame({
+  width,
+  height,
+  enabled,
+  playerIcon = 'X',
+}: UseCaroGameProps): UseCaroGameReturn {
   const theme = useTheme();
   const [gameState, setGameState] = useState<CaroGameState | null>(null);
   const [isAITurn, setIsAITurn] = useState(false);
@@ -40,6 +48,9 @@ export function useCaroGame({ width, height, enabled }: UseCaroGameProps): UseCa
   const gameStateRef = useRef<CaroGameState | null>(null);
   // Track if AI is processing to avoid duplicate triggers
   const aiProcessingRef = useRef(false);
+
+  // Determine computer icon based on player icon
+  const computerIcon = playerIcon === 'X' ? 'O' : 'X';
 
   // Initialize game when enabled
   useEffect(() => {
@@ -191,20 +202,23 @@ export function useCaroGame({ width, height, enabled }: UseCaroGameProps): UseCa
         let color: string | null = null;
         let disabled = false;
 
-        // Color is determined by the piece on the board - permanent once set
+        // Color and icon are determined by the piece on the board - permanent once set
         let movePlayer: 'player' | 'computer' | undefined = undefined;
+        let icon: 'X' | 'O' | null = null;
         if (piece === 'player') {
           // Player pieces are always primary color (blue)
           color = theme.palette.primary.main;
           movePlayer = 'player';
+          icon = playerIcon;
           disabled = true;
         } else if (piece === 'computer') {
           // Computer pieces are always error color (red)
           color = theme.palette.error.main;
           movePlayer = 'computer';
+          icon = computerIcon;
           disabled = true;
         }
-        // If piece is null, color remains null (transparent)
+        // If piece is null, color and icon remain null (transparent)
 
         // Disable cells if game ended or during AI turn
         if (
@@ -229,11 +243,12 @@ export function useCaroGame({ width, height, enabled }: UseCaroGameProps): UseCa
           disabled,
           isLastMove, // Extra highlight for last move
           movePlayer, // Track which player made the move for border color
+          icon, // X or O icon for caro game
         };
       }
     }
     return cells;
-  }, [enabled, gameState, selectedCell, isAITurn, width, height, theme]);
+  }, [enabled, gameState, selectedCell, isAITurn, width, height, theme, playerIcon, computerIcon]);
 
   return {
     gameState,
@@ -243,5 +258,7 @@ export function useCaroGame({ width, height, enabled }: UseCaroGameProps): UseCa
     handleReset,
     getStatusMessage,
     isGameEnded,
+    playerIcon,
+    computerIcon,
   };
 }

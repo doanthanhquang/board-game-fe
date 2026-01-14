@@ -13,6 +13,11 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Radio,
+  RadioGroup,
+  FormControlLabel,
+  FormControl,
+  FormLabel,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import HelpIcon from '@mui/icons-material/Help';
@@ -31,6 +36,8 @@ export const GameDetail = () => {
   const [error, setError] = useState<string | null>(null);
   const [showInstructions, setShowInstructions] = useState(false);
   const [showResultDialog, setShowResultDialog] = useState(false);
+  const [showIconSelector, setShowIconSelector] = useState(false);
+  const [playerIcon, setPlayerIcon] = useState<'X' | 'O'>('X');
   const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | undefined>(
     undefined
   );
@@ -40,8 +47,25 @@ export const GameDetail = () => {
   const caroGame = useCaroGame({
     width: game?.default_board_width || 0,
     height: game?.default_board_height || 0,
-    enabled: isCaroGame,
+    enabled: isCaroGame && !showIconSelector,
+    playerIcon: playerIcon,
   });
+
+  // Show icon selector when caro game is first loaded
+  useEffect(() => {
+    if (isCaroGame && game && !showIconSelector && !caroGame.gameState) {
+      setShowIconSelector(true);
+    }
+  }, [isCaroGame, game, showIconSelector, caroGame.gameState]);
+
+  const handleNewGameFromResult = () => {
+    caroGame.handleReset();
+    setSelectedCell(undefined);
+    setShowResultDialog(false);
+    if (isCaroGame) {
+      setShowIconSelector(true);
+    }
+  };
 
   // Initialize board cells from game configuration
   const boardCells = useMemo<BoardCell[][]>(() => {
@@ -129,9 +153,9 @@ export const GameDetail = () => {
   // Function button handlers
   const handleLeft = () => {
     if (showInstructions || showResultDialog) return;
-    
+
     if (isCaroGame) {
-      // For Caro game, navigate selected cell left (horizontal only for simplicity)
+      // For Caro game, navigate selected cell left
       if (selectedCell && game) {
         const newCol = Math.max(0, selectedCell.col - 1);
         setSelectedCell({ ...selectedCell, col: newCol });
@@ -152,9 +176,9 @@ export const GameDetail = () => {
 
   const handleRight = () => {
     if (showInstructions || showResultDialog) return;
-    
+
     if (isCaroGame) {
-      // For Caro game, navigate selected cell right (horizontal only for simplicity)
+      // For Caro game, navigate selected cell right
       if (selectedCell && game) {
         const newCol = Math.min(game.default_board_width - 1, selectedCell.col + 1);
         setSelectedCell({ ...selectedCell, col: newCol });
@@ -173,9 +197,55 @@ export const GameDetail = () => {
     }
   };
 
+  const handleUp = () => {
+    if (showInstructions || showResultDialog) return;
+
+    if (isCaroGame) {
+      // For Caro game, navigate selected cell up
+      if (selectedCell && game) {
+        const newRow = Math.max(0, selectedCell.row - 1);
+        setSelectedCell({ ...selectedCell, row: newRow });
+      } else if (game && !caroGame.isGameEnded && !caroGame.isAITurn) {
+        // Start selection at first cell if no selection
+        setSelectedCell({ row: 0, col: 0 });
+      }
+    } else {
+      // For other games, navigate selected cell up
+      if (selectedCell && game) {
+        const newRow = Math.max(0, selectedCell.row - 1);
+        setSelectedCell({ ...selectedCell, row: newRow });
+      } else if (game) {
+        setSelectedCell({ row: 0, col: 0 });
+      }
+    }
+  };
+
+  const handleDown = () => {
+    if (showInstructions || showResultDialog) return;
+
+    if (isCaroGame) {
+      // For Caro game, navigate selected cell down
+      if (selectedCell && game) {
+        const newRow = Math.min(game.default_board_height - 1, selectedCell.row + 1);
+        setSelectedCell({ ...selectedCell, row: newRow });
+      } else if (game && !caroGame.isGameEnded && !caroGame.isAITurn) {
+        // Start selection at first cell if no selection
+        setSelectedCell({ row: 0, col: 0 });
+      }
+    } else {
+      // For other games, navigate selected cell down
+      if (selectedCell && game) {
+        const newRow = Math.min(game.default_board_height - 1, selectedCell.row + 1);
+        setSelectedCell({ ...selectedCell, row: newRow });
+      } else if (game) {
+        setSelectedCell({ row: 0, col: 0 });
+      }
+    }
+  };
+
   const handleEnter = () => {
     if (showInstructions || showResultDialog) return;
-    
+
     if (isCaroGame) {
       // For Caro game, make move if cell is selected and game is active
       if (
@@ -320,12 +390,16 @@ export const GameDetail = () => {
                 <FunctionButtons
                   onLeft={handleLeft}
                   onRight={handleRight}
+                  onUp={handleUp}
+                  onDown={handleDown}
                   onEnter={handleEnter}
                   onBack={handleBack}
                   onHint={handleHint}
                   disabled={{
                     left: showInstructions || showResultDialog,
                     right: showInstructions || showResultDialog,
+                    up: showInstructions || showResultDialog,
+                    down: showInstructions || showResultDialog,
                     enter:
                       showInstructions ||
                       showResultDialog ||
@@ -354,13 +428,85 @@ export const GameDetail = () => {
         </DialogActions>
       </Dialog>
 
+      {/* Icon Selector Dialog for Caro Game */}
+      {isCaroGame && (
+        <Dialog
+          open={showIconSelector}
+          onClose={() => {}} // Prevent closing without selection
+          maxWidth="sm"
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: 2,
+            },
+          }}
+        >
+          <DialogTitle>
+            <Typography variant="h5" component="div" fontWeight="bold">
+              Chọn Icon của bạn
+            </Typography>
+          </DialogTitle>
+          <DialogContent>
+            <FormControl component="fieldset" sx={{ width: '100%', mt: 2 }}>
+              <FormLabel component="legend">Bạn muốn chơi với icon nào?</FormLabel>
+              <RadioGroup
+                row
+                value={playerIcon}
+                onChange={(e) => setPlayerIcon(e.target.value as 'X' | 'O')}
+                sx={{ justifyContent: 'center', mt: 2, gap: 4 }}
+              >
+                <FormControlLabel
+                  value="X"
+                  control={<Radio />}
+                  label={
+                    <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+                      X
+                    </Typography>
+                  }
+                />
+                <FormControlLabel
+                  value="O"
+                  control={<Radio />}
+                  label={
+                    <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'error.main' }}>
+                      O
+                    </Typography>
+                  }
+                />
+              </RadioGroup>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ mt: 2, textAlign: 'center' }}
+              >
+                {playerIcon === 'X'
+                  ? 'Bạn sẽ chơi X, Computer sẽ chơi O'
+                  : 'Bạn sẽ chơi O, Computer sẽ chơi X'}
+              </Typography>
+            </FormControl>
+          </DialogContent>
+          <DialogActions sx={{ justifyContent: 'center', pb: 3, px: 3 }}>
+            <Button
+              variant="contained"
+              onClick={() => {
+                setShowIconSelector(false);
+              }}
+              size="large"
+              sx={{ minWidth: 120 }}
+            >
+              Bắt đầu
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
+
       {/* Game Result Dialog - Common component for all games */}
       {isCaroGame && caroGame.gameState && (
         <GameResultDialog
           open={showResultDialog}
           gameStatus={caroGame.gameState.gameStatus}
           onClose={() => setShowResultDialog(false)}
-          onNewGame={caroGame.handleReset}
+          onNewGame={handleNewGameFromResult}
           gameName={game.name}
         />
       )}
