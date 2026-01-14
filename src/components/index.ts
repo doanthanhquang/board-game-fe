@@ -4,6 +4,7 @@
  */
 
 export { GameResultDialog } from './game-result-dialog';
+export { GameMenuDialog } from './game-menu-dialog';
 export { AppHeader } from './app-header';
 export { ThemeToggle } from './theme-toggle';
 export { ProtectedRoute } from './protected-route';

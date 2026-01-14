@@ -10,14 +10,24 @@ import {
   CardActionArea,
   CircularProgress,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
 } from '@mui/material';
 import { getGames, type Game } from '@/api/games';
+import { GameMenuDialog } from '@/components/game-menu-dialog';
 
 export const Dashboard = () => {
   const navigate = useNavigate();
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedGame, setSelectedGame] = useState<Game | null>(null);
+  const [showMenuDialog, setShowMenuDialog] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(false);
+  const [instructions, setInstructions] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchGames = async () => {
@@ -39,8 +49,23 @@ export const Dashboard = () => {
     fetchGames();
   }, []);
 
-  const handleGameClick = (slug: string) => {
+  const handleGameClick = (game: Game) => {
+    setSelectedGame(game);
+    setShowMenuDialog(true);
+  };
+
+  const handleNewGame = (slug: string) => {
     navigate(`/game/${slug}`);
+  };
+
+  const handleShowInstructions = (gameInstructions: string | null) => {
+    setInstructions(gameInstructions);
+    setShowInstructions(true);
+  };
+
+  const handleCloseInstructions = () => {
+    setShowInstructions(false);
+    setInstructions(null);
   };
 
   return (
@@ -100,7 +125,7 @@ export const Dashboard = () => {
                     }}
                   >
                     <CardActionArea
-                      onClick={() => handleGameClick(game.slug)}
+                      onClick={() => handleGameClick(game)}
                       sx={{
                         height: '100%',
                         display: 'flex',
@@ -134,6 +159,30 @@ export const Dashboard = () => {
           </Box>
         </Paper>
       </Box>
+
+      {/* Game Menu Dialog */}
+      <GameMenuDialog
+        open={showMenuDialog}
+        game={selectedGame}
+        onClose={() => setShowMenuDialog(false)}
+        onNewGame={handleNewGame}
+        onShowInstructions={handleShowInstructions}
+      />
+
+      {/* Instructions Dialog */}
+      <Dialog open={showInstructions} onClose={handleCloseInstructions} maxWidth="md" fullWidth>
+        <DialogTitle>Game Instructions</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-line' }}>
+            {instructions || 'No instructions available for this game.'}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseInstructions} variant="contained">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };
