@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -17,6 +17,8 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import HelpIcon from '@mui/icons-material/Help';
 import { getGameBySlug, type Game } from '@/api/games';
+import { GameBoard, FunctionButtons } from '@/components/game-board';
+import type { BoardCell } from '@/types/board';
 
 export const GameDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -25,6 +27,29 @@ export const GameDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showInstructions, setShowInstructions] = useState(false);
+  const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | undefined>(
+    undefined
+  );
+
+  // Initialize board cells from game configuration
+  const boardCells = useMemo<BoardCell[][]>(() => {
+    if (!game) return [];
+
+    const cells: BoardCell[][] = [];
+    for (let row = 0; row < game.default_board_height; row++) {
+      cells[row] = [];
+      for (let col = 0; col < game.default_board_width; col++) {
+        cells[row][col] = {
+          row,
+          col,
+          color: null,
+          selected: false,
+          disabled: false,
+        };
+      }
+    }
+    return cells;
+  }, [game]);
 
   useEffect(() => {
     const fetchGame = async () => {
@@ -52,12 +77,53 @@ export const GameDetail = () => {
     fetchGame();
   }, [slug]);
 
-  const handleBack = () => {
+  const handleBackToDashboard = () => {
     navigate('/dashboard');
   };
 
   const handleToggleInstructions = () => {
     setShowInstructions(!showInstructions);
+  };
+
+  // Board cell click handler
+  const handleCellClick = (row: number, col: number) => {
+    setSelectedCell({ row, col });
+    // TODO: Implement game-specific logic here
+    console.log(`Cell clicked: row ${row}, col ${col}`);
+  };
+
+  // Function button handlers
+  const handleLeft = () => {
+    if (selectedCell) {
+      const newCol = Math.max(0, selectedCell.col - 1);
+      setSelectedCell({ ...selectedCell, col: newCol });
+    }
+    // TODO: Implement game-specific left navigation
+  };
+
+  const handleRight = () => {
+    if (selectedCell && game) {
+      const newCol = Math.min(game.default_board_width - 1, selectedCell.col + 1);
+      setSelectedCell({ ...selectedCell, col: newCol });
+    }
+    // TODO: Implement game-specific right navigation
+  };
+
+  const handleEnter = () => {
+    if (selectedCell) {
+      // TODO: Implement game-specific enter action
+      console.log(`Enter pressed at: row ${selectedCell.row}, col ${selectedCell.col}`);
+    }
+  };
+
+  const handleBack = () => {
+    setSelectedCell(undefined);
+    // TODO: Implement game-specific back action
+  };
+
+  const handleHint = () => {
+    handleToggleInstructions();
+    // TODO: Implement game-specific hint/help
   };
 
   if (loading) {
@@ -85,7 +151,7 @@ export const GameDetail = () => {
             <Alert severity="error" sx={{ mb: 2 }}>
               {error || 'Game not found'}
             </Alert>
-            <Button variant="contained" startIcon={<ArrowBackIcon />} onClick={handleBack}>
+            <Button variant="contained" startIcon={<ArrowBackIcon />} onClick={handleBackToDashboard}>
               Back to Dashboard
             </Button>
           </Paper>
@@ -102,7 +168,7 @@ export const GameDetail = () => {
             <Button
               variant="outlined"
               startIcon={<ArrowBackIcon />}
-              onClick={handleBack}
+              onClick={handleBackToDashboard}
               sx={{ mb: 2 }}
             >
               Back to Dashboard
@@ -130,12 +196,24 @@ export const GameDetail = () => {
           )}
 
           <Box sx={{ mt: 4, p: 3, bgcolor: 'background.default', borderRadius: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              Game Board (Coming Soon)
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Game logic and board will be implemented here.
-            </Typography>
+            {game && boardCells.length > 0 && (
+              <>
+                <GameBoard
+                  width={game.default_board_width}
+                  height={game.default_board_height}
+                  cells={boardCells}
+                  selectedCell={selectedCell}
+                  onCellClick={handleCellClick}
+                />
+                <FunctionButtons
+                  onLeft={handleLeft}
+                  onRight={handleRight}
+                  onEnter={handleEnter}
+                  onBack={handleBack}
+                  onHint={handleHint}
+                />
+              </>
+            )}
           </Box>
         </Paper>
       </Box>
