@@ -27,6 +27,8 @@ interface GameMenuDialogProps {
   game: Game | null;
   onClose: () => void;
   onNewGame: (slug: string) => void;
+  onContinue: (slug: string) => void;
+  canContinue: boolean;
   onShowInstructions: (instructions: string | null) => void;
   onShowRanking: () => void;
   onShowComments: () => void;
@@ -41,6 +43,8 @@ export const GameMenuDialog = ({
   game,
   onClose,
   onNewGame,
+  onContinue,
+  canContinue,
   onShowInstructions,
   onShowRanking,
   onShowComments,
@@ -50,7 +54,13 @@ export const GameMenuDialog = ({
 
   // Menu items configuration
   const menuItems = [
-    { id: 'continue', label: 'Tiếp tục', icon: PlayArrowIcon, disabled: true, action: null },
+    {
+      id: 'continue',
+      label: 'Tiếp tục',
+      icon: PlayArrowIcon,
+      disabled: !canContinue,
+      action: 'continue',
+    },
     { id: 'new-game', label: 'Ván mới', icon: RefreshIcon, disabled: false, action: 'newGame' },
     {
       id: 'instruction',
@@ -95,6 +105,13 @@ export const GameMenuDialog = ({
     }
   };
 
+  const handleContinue = () => {
+    if (game) {
+      onContinue(game.slug);
+      onClose();
+    }
+  };
+
   const handleInstruction = () => {
     if (game) {
       onShowInstructions(game.instructions);
@@ -132,7 +149,9 @@ export const GameMenuDialog = ({
   const handleEnter = () => {
     const item = menuItems[selectedIndex];
     if (item && !item.disabled) {
-      if (item.action === 'newGame') {
+      if (item.action === 'continue') {
+        handleContinue();
+      } else if (item.action === 'newGame') {
         handleNewGame();
       } else if (item.action === 'instruction') {
         handleInstruction();
@@ -164,7 +183,9 @@ export const GameMenuDialog = ({
     setSelectedIndex(index);
     const item = menuItems[index];
     if (item && !item.disabled) {
-      if (item.action === 'newGame') {
+      if (item.action === 'continue') {
+        handleContinue();
+      } else if (item.action === 'newGame') {
         handleNewGame();
       } else if (item.action === 'instruction') {
         handleInstruction();
@@ -249,10 +270,7 @@ export const GameMenuDialog = ({
                       <ListItemIcon>
                         <IconComponent color={isDisabled ? 'disabled' : 'inherit'} />
                       </ListItemIcon>
-                      <ListItemText
-                        primary={item.label}
-                        secondary={isDisabled ? 'Coming Soon' : ''}
-                      />
+                      <ListItemText primary={item.label} />
                     </ListItemButton>
                   </ListItem>
                 </span>

@@ -83,16 +83,16 @@ export const GameRanking = ({ slug }: GameRankingProps) => {
         >
           <Box component="thead" sx={{ display: 'table-header-group' }}>
             <Box component="tr">
-              <Box component="th" sx={{ width: '10%' }}>
+              <Box component="th" sx={{ width: '10%', textAlign: 'center !important' }}>
                 #
               </Box>
               <Box component="th" sx={{ width: '40%' }}>
                 Người chơi
               </Box>
-              <Box component="th" sx={{ width: '25%' }}>
+              <Box component="th" sx={{ width: '25%', textAlign: 'center !important' }}>
                 Số nước đi tốt nhất
               </Box>
-              <Box component="th" sx={{ width: '25%' }}>
+              <Box component="th" sx={{ width: '25%', textAlign: 'center !important' }}>
                 Số trận thắng
               </Box>
             </Box>
@@ -100,10 +100,16 @@ export const GameRanking = ({ slug }: GameRankingProps) => {
           <Box component="tbody" sx={{ display: 'table-row-group' }}>
             {rankings.map((entry) => (
               <Box component="tr" key={`${entry.user_id}-${entry.rank}`}>
-                <Box component="td">{entry.rank}</Box>
+                <Box component="td" sx={{ textAlign: 'center' }}>
+                  {entry.rank}
+                </Box>
                 <Box component="td">{entry.username}</Box>
-                <Box component="td">{entry.best_moves}</Box>
-                <Box component="td">{entry.wins}</Box>
+                <Box component="td" sx={{ textAlign: 'center' }}>
+                  {entry.best_moves}
+                </Box>
+                <Box component="td" sx={{ textAlign: 'center' }}>
+                  {entry.wins}
+                </Box>
               </Box>
             ))}
           </Box>

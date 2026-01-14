@@ -27,6 +27,9 @@ interface UseCaroGameReturn {
   isGameEnded: boolean;
   playerIcon: 'X' | 'O' | undefined;
   computerIcon: 'X' | 'O' | undefined;
+  // Persistence helpers
+  getSerializableState: () => CaroGameState | null;
+  restoreState: (state: CaroGameState) => void;
 }
 
 /**
@@ -189,6 +192,23 @@ export function useCaroGame({
     return gameState?.gameStatus !== 'playing';
   }, [gameState]);
 
+  const getSerializableState = useCallback((): CaroGameState | null => {
+    if (!gameState) return null;
+    return gameState;
+  }, [gameState]);
+
+  const restoreState = useCallback(
+    (state: CaroGameState) => {
+      if (!enabled) return;
+      setGameState(state);
+      gameStateRef.current = state;
+      setSelectedCell(undefined);
+      setIsAITurn(false);
+      aiProcessingRef.current = false;
+    },
+    [enabled]
+  );
+
   // Generate board cells from game state
   const boardCells = useMemo<BoardCell[][]>(() => {
     if (!enabled || !gameState) return [];
@@ -260,5 +280,7 @@ export function useCaroGame({
     isGameEnded,
     playerIcon,
     computerIcon,
+    getSerializableState,
+    restoreState,
   };
 }

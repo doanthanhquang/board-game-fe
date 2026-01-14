@@ -16,7 +16,7 @@ import {
   IconButton,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { getGames, type Game } from '@/api/games';
+import { getGames, listGameSaves, type Game } from '@/api/games';
 import { GameMenuDialog } from '@/components/game-menu-dialog';
 import { FunctionButtons } from '@/components/game-board';
 import { GameRanking, GameFeedbackDialog } from '@/components';
@@ -33,6 +33,7 @@ export const Dashboard = () => {
   const [showRankingDialog, setShowRankingDialog] = useState(false);
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
   const [selectedGameIndex, setSelectedGameIndex] = useState(0);
+  const [canContinueSelectedGame, setCanContinueSelectedGame] = useState(false);
   const gameCardsRef = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
@@ -60,8 +61,31 @@ export const Dashboard = () => {
     setShowMenuDialog(true);
   };
 
+  // When menu opens for a selected game, check if there is any saved game to enable Continue
+  useEffect(() => {
+    const checkSaves = async () => {
+      if (!showMenuDialog || !selectedGame) {
+        setCanContinueSelectedGame(false);
+        return;
+      }
+
+      try {
+        const saves = await listGameSaves(selectedGame.slug);
+        setCanContinueSelectedGame(Array.isArray(saves) && saves.length > 0);
+      } catch {
+        setCanContinueSelectedGame(false);
+      }
+    };
+
+    void checkSaves();
+  }, [showMenuDialog, selectedGame]);
+
   const handleNewGame = (slug: string) => {
     navigate(`/game/${slug}`);
+  };
+
+  const handleContinueGame = (slug: string) => {
+    navigate(`/game/${slug}?continue=1`);
   };
 
   const handleShowRanking = () => {
@@ -317,6 +341,8 @@ export const Dashboard = () => {
         game={selectedGame}
         onClose={() => setShowMenuDialog(false)}
         onNewGame={handleNewGame}
+        onContinue={handleContinueGame}
+        canContinue={canContinueSelectedGame}
         onShowInstructions={handleShowInstructions}
         onShowRanking={handleShowRanking}
         onShowComments={handleShowComments}

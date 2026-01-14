@@ -3,7 +3,8 @@
  * Functions for interacting with game-related endpoints
  */
 
-import { get, post } from '@/api';
+import { get, post, del } from '@/api';
+import type { CaroGameState } from '@/types/game-state';
 
 /**
  * Game interface matching backend response
@@ -70,6 +71,46 @@ export interface RecordGameScoreResponse {
 }
 
 /**
+ * Saved game metadata returned from backend
+ */
+export interface GameSaveSummary {
+  id: string;
+  session_id: string;
+  save_name: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GameSaveListResponse {
+  success: boolean;
+  data: GameSaveSummary[];
+}
+
+export interface SaveGameStateRequest {
+  gameState: CaroGameState;
+  saveName?: string;
+}
+
+export interface SaveGameStateResponse {
+  success: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data?: any;
+  message?: string;
+}
+
+export interface LoadGameSaveResponse {
+  success: boolean;
+  data: {
+    id: string;
+    session_id: string;
+    save_name: string;
+    created_at: string;
+    updated_at: string;
+    game_state: CaroGameState;
+  };
+}
+
+/**
  * Fetch all enabled games
  * @returns Promise resolving to array of games
  */
@@ -111,4 +152,37 @@ export const getGameRankings = async (
 ): Promise<GameRankingEntry[]> => {
   const response = await get<GameRankingResponse>(`/games/${slug}/rankings`, { scope });
   return response.data;
+};
+
+/**
+ * Save current game state for the authenticated user
+ */
+export const saveGameState = async (
+  slug: string,
+  payload: SaveGameStateRequest
+): Promise<SaveGameStateResponse> => {
+  return post<SaveGameStateResponse, SaveGameStateRequest>(`/games/${slug}/saves`, payload);
+};
+
+/**
+ * List saved games for the current user and given game
+ */
+export const listGameSaves = async (slug: string): Promise<GameSaveSummary[]> => {
+  const response = await get<GameSaveListResponse>(`/games/${slug}/saves`);
+  return response.data;
+};
+
+/**
+ * Load a saved game state
+ */
+export const loadGameSave = async (slug: string, saveId: string): Promise<CaroGameState> => {
+  const response = await get<LoadGameSaveResponse>(`/games/${slug}/saves/${saveId}`);
+  return response.data.game_state;
+};
+
+/**
+ * Clear all saved games for the current user and given game
+ */
+export const clearGameSaves = async (slug: string): Promise<void> => {
+  await del<void>(`/games/${slug}/saves`);
 };

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Box,
   Container,
@@ -22,7 +22,16 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import HelpIcon from '@mui/icons-material/Help';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import { getGameBySlug, type Game, recordGameScore } from '@/api/games';
+import SaveIcon from '@mui/icons-material/Save';
+import {
+  getGameBySlug,
+  type Game,
+  recordGameScore,
+  saveGameState,
+  listGameSaves,
+  loadGameSave,
+  clearGameSaves,
+} from '@/api/games';
 import { GameBoard, FunctionButtons } from '@/components/game-board';
 import { GameResultDialog } from '@/components/game-result-dialog';
 import type { BoardCell } from '@/types/board';
@@ -31,6 +40,7 @@ import { useCaroGame } from '@/hooks/use-caro-game';
 export const GameDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [game, setGame] = useState<Game | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +52,10 @@ export const GameDetail = () => {
     undefined
   );
   const [scoreSubmitted, setScoreSubmitted] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const isCaroGame = game?.slug === 'caro-4';
+  const shouldContinue = searchParams.get('continue') === '1';
 
   // Use caro game hook
   const caroGame = useCaroGame({
@@ -68,14 +81,14 @@ export const GameDetail = () => {
     return movesCount;
   }, [isCaroGame, caroGame.gameState]);
 
-  // Show icon selector when caro game is first loaded
+  // Show icon selector when starting a NEW caro game (not when continuing)
   useEffect(() => {
-    if (isCaroGame && game && !showIconSelector && !caroGame.gameState) {
+    if (isCaroGame && game && !showIconSelector && !caroGame.gameState && !shouldContinue) {
       setShowIconSelector(true);
     }
-  }, [isCaroGame, game, showIconSelector, caroGame.gameState]);
+  }, [isCaroGame, game, showIconSelector, caroGame.gameState, shouldContinue]);
 
-  // Submit score when player wins (Caro only)
+  // Submit score when player wins (Caro only) and clear saves for finished game
   useEffect(() => {
     if (
       !isCaroGame ||
@@ -101,9 +114,23 @@ export const GameDetail = () => {
       recordGameScore(slug, { movesCount, result: 'player-won' }).catch(() => {
         // Ignore score errors in UI
       });
+      // Clear any saves related to this game so user cannot continue a finished match
+      clearGameSaves(slug).catch(() => {
+        // Ignore clear errors in UI
+      });
       setScoreSubmitted(true);
     }
   }, [isCaroGame, game, caroGame.gameState, scoreSubmitted, slug, caroGame]);
+
+  // When game ends with computer win, also clear saves so user cannot continue
+  useEffect(() => {
+    if (!isCaroGame || !slug || !caroGame.gameState) return;
+    if (caroGame.gameState.gameStatus !== 'computer-won') return;
+
+    clearGameSaves(slug).catch(() => {
+      // Ignore clear errors in UI
+    });
+  }, [isCaroGame, slug, caroGame.gameState]);
 
   // Reset for new game from result dialog
   const handleNewGameFromResult = () => {
@@ -174,6 +201,43 @@ export const GameDetail = () => {
     fetchGame();
   }, [slug]);
 
+  // Auto-continue from latest saved game when requested via query param
+  useEffect(() => {
+    const tryContinue = async () => {
+      if (!shouldContinue || !isCaroGame || !slug) return;
+
+      try {
+        const items = await listGameSaves(slug);
+        if (!items || items.length === 0) {
+          // No saves → clear continue flag by re-navigating without query
+          navigate(`/game/${slug}`, { replace: true });
+          return;
+        }
+
+        const latest = items[0];
+        const state = await loadGameSave(slug, latest.id);
+
+        // Only allow continue when game is still in progress
+        if (state.gameStatus !== 'playing') {
+          navigate(`/game/${slug}`, { replace: true });
+          return;
+        }
+
+        caroGame.restoreState(state);
+        setShowIconSelector(false);
+        setShowResultDialog(false);
+        setScoreSubmitted(false);
+        setSelectedCell(undefined);
+      } catch {
+        // On error, fall back to fresh game
+        navigate(`/game/${slug}`, { replace: true });
+      }
+    };
+
+    void tryContinue();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldContinue, isCaroGame, slug]);
+
   // Show result dialog when game ends
   useEffect(() => {
     if (isCaroGame && caroGame.isGameEnded && caroGame.gameState) {
@@ -187,6 +251,23 @@ export const GameDetail = () => {
 
   const handleToggleInstructions = () => {
     setShowInstructions(!showInstructions);
+  };
+
+  const handleSaveGame = async () => {
+    if (!isCaroGame || !slug) return;
+    const state = caroGame.getSerializableState();
+    if (!state) return;
+
+    try {
+      setSaving(true);
+      setSaveError(null);
+      await saveGameState(slug, { gameState: state });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Không thể lưu ván chơi.';
+      setSaveError(message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Board cell click handler
@@ -411,6 +492,22 @@ export const GameDetail = () => {
                 <Typography variant="body2" color="text.secondary">
                   Điểm hiện tại: {playerScore}
                 </Typography>
+                <Box sx={{ mt: 1, display: 'flex', justifyContent: 'center', gap: 1 }}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<SaveIcon />}
+                    size="small"
+                    onClick={handleSaveGame}
+                    disabled={saving}
+                  >
+                    {saving ? 'Đang lưu...' : 'Lưu ván'}
+                  </Button>
+                </Box>
+                {saveError && (
+                  <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
+                    {saveError}
+                  </Typography>
+                )}
                 {caroGame.isGameEnded && (
                   <Button
                     variant="contained"
