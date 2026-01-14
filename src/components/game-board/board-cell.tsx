@@ -29,6 +29,10 @@ export const BoardCell = memo(({ cell, onClick, size = 40 }: BoardCellProps) => 
 
   // Determine border color based on move player
   const getBorderColor = () => {
+    if (cell.isFood) {
+      // Food gets bright warning color border for maximum visibility
+      return theme.palette.warning.dark;
+    }
     if (cell.isLastMove) {
       // Last move gets extra highlight - thicker border with distinct color
       if (cell.movePlayer === 'player') {
@@ -59,13 +63,15 @@ export const BoardCell = memo(({ cell, onClick, size = 40 }: BoardCellProps) => 
     borderRadius: '50%',
     // Background color (transparent when showing X/O icon)
     backgroundColor,
-    border: cell.isLastMove
-      ? '4px solid' // Thicker border for last move
-      : cell.selected && !hasPiece
-        ? '3px solid'
-        : hasPiece
-          ? '2px solid' // Colored border for all moves
-          : '1px solid',
+    border: cell.isFood
+      ? '4px solid' // Thick border for food
+      : cell.isLastMove
+        ? '4px solid' // Thicker border for last move
+        : cell.selected && !hasPiece
+          ? '3px solid'
+          : hasPiece
+            ? '2px solid' // Colored border for all moves
+            : '1px solid',
     borderColor: getBorderColor(),
     // Keep full opacity for cells with pieces - never reduce it
     opacity: hasPiece ? 1 : cell.disabled && !cell.isLastMove ? 0.5 : 1,
@@ -74,13 +80,23 @@ export const BoardCell = memo(({ cell, onClick, size = 40 }: BoardCellProps) => 
     transition: hasPiece
       ? 'border 0.2s ease-in-out, box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out'
       : 'all 0.2s ease-in-out',
+    // Pulsing animation for food
+    ...(cell.isFood && {
+      animation: 'foodPulse 1.5s ease-in-out infinite',
+    }),
     '&:hover': {
       // Never change background color on hover for cells with pieces
       backgroundColor: hasPiece ? backgroundColor : undefined,
       transform: cell.disabled ? 'none' : 'scale(1.1)',
       boxShadow: cell.disabled ? 'none' : 2,
     },
-    boxShadow: cell.isLastMove ? 4 : cell.selected && !hasPiece ? 3 : 0,
+    boxShadow: cell.isFood
+      ? `0 0 12px ${theme.palette.warning.main}80` // Glow effect for food
+      : cell.isLastMove
+        ? 4
+        : cell.selected && !hasPiece
+          ? 3
+          : 0,
   };
 
   return (

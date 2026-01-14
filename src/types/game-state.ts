@@ -20,3 +20,23 @@ export interface CaroGameState {
   moves: number;
   lastMove: Move | null;
 }
+
+export type SnakeDirection = 'up' | 'down' | 'left' | 'right';
+
+export type SnakeGameStatus = 'playing' | 'paused' | 'game-over';
+
+export interface SnakePosition {
+  row: number;
+  col: number;
+}
+
+export interface SnakeGameState {
+  snake: SnakePosition[];
+  food: SnakePosition;
+  direction: SnakeDirection;
+  nextDirection: SnakeDirection | null;
+  score: number;
+  gameStatus: SnakeGameStatus;
+  boardWidth: number;
+  boardHeight: number;
+}

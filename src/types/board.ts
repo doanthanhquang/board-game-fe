@@ -7,6 +7,7 @@ export interface BoardCell {
   isLastMove?: boolean; // Highlight last move with thicker border
   movePlayer?: 'player' | 'computer'; // Which player made the move at this cell
   icon?: 'X' | 'O' | null; // Icon for caro game (X or O)
+  isFood?: boolean; // Mark food cell for Snake game
 }
 
 /**
@@ -34,6 +35,7 @@ export interface GameBoardProps {
   selectedCell?: { row: number; col: number };
   onCellClick?: (row: number, col: number) => void;
   disabled?: boolean;
+  cellSizeMultiplier?: number; // Multiplier for cell size (default: 1, use < 1 for smaller cells)
 }
 
 /**

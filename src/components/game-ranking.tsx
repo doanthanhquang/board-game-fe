@@ -16,6 +16,7 @@ export const GameRanking = ({ slug }: GameRankingProps) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isTicTacToe = slug === 'tic-tac-toe';
+  const isSnakeGame = slug === 'snake';
 
   useEffect(() => {
     const fetchRankings = async () => {
@@ -24,7 +25,7 @@ export const GameRanking = ({ slug }: GameRankingProps) => {
       try {
         setLoading(true);
         setError(null);
-        const sort = isTicTacToe ? 'wins' : 'best_moves';
+        const sort = isTicTacToe ? 'wins' : isSnakeGame ? 'best_score' : 'best_moves';
         const data = await getGameRankings(slug, rankingTab, sort);
         setRankings(data);
       } catch (err) {
@@ -37,7 +38,7 @@ export const GameRanking = ({ slug }: GameRankingProps) => {
     };
 
     fetchRankings();
-  }, [slug, rankingTab, isTicTacToe]);
+  }, [slug, rankingTab, isTicTacToe, isSnakeGame]);
 
   return (
     <Box>
@@ -88,17 +89,32 @@ export const GameRanking = ({ slug }: GameRankingProps) => {
               <Box component="th" sx={{ width: '10%', textAlign: 'center !important' }}>
                 #
               </Box>
-              <Box component="th" sx={{ width: '40%' }}>
+              <Box
+                component="th"
+                sx={{
+                  width: isSnakeGame ? '50%' : isTicTacToe ? '50%' : '40%',
+                }}
+              >
                 Người chơi
               </Box>
-              {!isTicTacToe && (
-                <Box component="th" sx={{ width: '25%', textAlign: 'center !important' }}>
-                  Số nước đi tốt nhất
+              {isSnakeGame ? (
+                <Box component="th" sx={{ width: '40%', textAlign: 'center !important' }}>
+                  Số điểm
                 </Box>
+              ) : (
+                <>
+                  {!isTicTacToe && (
+                    <Box component="th" sx={{ width: '25%', textAlign: 'center !important' }}>
+                      Số nước đi tốt nhất
+                    </Box>
+                  )}
+                  {!isSnakeGame && (
+                    <Box component="th" sx={{ width: '25%', textAlign: 'center !important' }}>
+                      Số trận thắng
+                    </Box>
+                  )}
+                </>
               )}
-              <Box component="th" sx={{ width: '25%', textAlign: 'center !important' }}>
-                Số trận thắng
-              </Box>
             </Box>
           </Box>
           <Box component="tbody" sx={{ display: 'table-row-group' }}>
@@ -108,14 +124,24 @@ export const GameRanking = ({ slug }: GameRankingProps) => {
                   {entry.rank}
                 </Box>
                 <Box component="td">{entry.username}</Box>
-                {!isTicTacToe && (
+                {isSnakeGame ? (
                   <Box component="td" sx={{ textAlign: 'center' }}>
-                    {entry.best_moves}
+                    {entry.best_score ?? 0}
                   </Box>
+                ) : (
+                  <>
+                    {!isTicTacToe && (
+                      <Box component="td" sx={{ textAlign: 'center' }}>
+                        {entry.best_moves}
+                      </Box>
+                    )}
+                    {!isSnakeGame && (
+                      <Box component="td" sx={{ textAlign: 'center' }}>
+                        {entry.wins}
+                      </Box>
+                    )}
+                  </>
                 )}
-                <Box component="td" sx={{ textAlign: 'center' }}>
-                  {entry.wins}
-                </Box>
               </Box>
             ))}
           </Box>

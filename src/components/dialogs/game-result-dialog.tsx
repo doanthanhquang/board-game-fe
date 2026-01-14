@@ -14,11 +14,12 @@ import type { GameStatus } from '@/types/game-state';
 
 interface GameResultDialogProps {
   open: boolean;
-  gameStatus: GameStatus;
+  gameStatus: GameStatus | 'game-over';
   onClose: () => void;
   onNewGame?: () => void;
   gameName?: string;
   score?: number;
+  onBackToDashboard?: () => void;
 }
 
 /**
@@ -32,6 +33,7 @@ export const GameResultDialog = ({
   onNewGame,
   gameName = 'Trò chơi',
   score,
+  onBackToDashboard,
 }: GameResultDialogProps) => {
   const isGameEnded = gameStatus !== 'playing';
 
@@ -61,6 +63,13 @@ export const GameResultDialog = ({
           message: 'Trận đấu kết thúc với kết quả hòa!',
           icon: <EmojiEventsIcon sx={{ fontSize: 80, color: 'warning.main' }} />,
           color: 'warning',
+        };
+      case 'game-over':
+        return {
+          title: '🐍 Game Over',
+          message: 'Rắn đã va chạm, hãy thử lại!',
+          icon: <SentimentVeryDissatisfiedIcon sx={{ fontSize: 80, color: 'error.main' }} />,
+          color: 'error',
         };
       default:
         return null;
@@ -110,11 +119,13 @@ export const GameResultDialog = ({
               {gameName}
             </Typography>
           )}
-          {gameStatus === 'player-won' && typeof score === 'number' && score > 0 && (
-            <Typography variant="h6" color="success.main">
-              Điểm của bạn: {score}
-            </Typography>
-          )}
+          {(gameStatus === 'player-won' || gameStatus === 'game-over') &&
+            typeof score === 'number' &&
+            score > 0 && (
+              <Typography variant="h6" color="success.main">
+                Điểm của bạn: {score}
+              </Typography>
+            )}
         </Box>
       </DialogContent>
       <DialogActions sx={{ justifyContent: 'center', pb: 3, px: 3 }}>
@@ -130,6 +141,16 @@ export const GameResultDialog = ({
             sx={{ minWidth: 120 }}
           >
             Chơi lại
+          </Button>
+        )}
+        {onBackToDashboard && (
+          <Button
+            variant="outlined"
+            onClick={onBackToDashboard}
+            size="large"
+            sx={{ minWidth: 120 }}
+          >
+            Quay lại
           </Button>
         )}
         <Button variant="outlined" onClick={onClose} size="large" sx={{ minWidth: 120 }}>

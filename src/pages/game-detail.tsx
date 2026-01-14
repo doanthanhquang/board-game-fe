@@ -15,6 +15,8 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import HelpIcon from '@mui/icons-material/Help';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import SaveIcon from '@mui/icons-material/Save';
+import PauseIcon from '@mui/icons-material/Pause';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import {
   getGameBySlug,
   type Game,
@@ -31,6 +33,8 @@ import { useCaroGame } from '@/hooks/use-caro-game';
 import { useTicTacToeGame } from '@/hooks/use-tic-tac-toe-game';
 import type { CaroGameState } from '@/types/game-state';
 import type { TicTacToeGameState } from '@/games/tic-tac-toe/tic-tac-toe-game';
+import type { SnakeGameState } from '@/types/game-state';
+import { useSnakeGame } from '@/hooks/use-snake-game';
 
 export const GameDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -55,6 +59,7 @@ export const GameDetail = () => {
   const [hasChosenIcon, setHasChosenIcon] = useState(false);
   const isCaroGame = game?.slug === 'caro-4' || game?.slug === 'caro-5';
   const isTicTacToeGame = game?.slug === 'tic-tac-toe';
+  const isSnakeGame = game?.slug === 'snake';
   const targetInRow = game?.slug === 'caro-5' ? 5 : 4;
   const shouldContinue = searchParams.get('continue') === '1';
 
@@ -73,6 +78,13 @@ export const GameDetail = () => {
     playerIcon,
   });
 
+  const snakeGame = useSnakeGame({
+    width: game?.default_board_width || 0,
+    height: game?.default_board_height || 0,
+    enabled: Boolean(isSnakeGame),
+    speedMs: 180,
+  });
+
   // Live player score (number of player moves in current game)
   const playerScore = useMemo(() => {
     if (!isCaroGame || !caroGame.gameState) return 0;
@@ -88,6 +100,8 @@ export const GameDetail = () => {
     }
     return movesCount;
   }, [isCaroGame, caroGame.gameState]);
+
+  const snakeScore = snakeGame.gameState?.score ?? 0;
 
   // Show icon selector when starting a NEW caro game (not when continuing)
   useEffect(() => {
@@ -123,6 +137,13 @@ export const GameDetail = () => {
     shouldContinue,
     hasChosenIcon,
   ]);
+
+  // Clear manual selection when playing Snake (keyboard only)
+  useEffect(() => {
+    if (isSnakeGame) {
+      setSelectedCell(undefined);
+    }
+  }, [isSnakeGame]);
 
   // Submit score when player wins (Caro only) and clear saves for finished game
   useEffect(() => {
@@ -170,19 +191,29 @@ export const GameDetail = () => {
 
   // Reset for new game from result dialog
   const handleNewGameFromResult = () => {
-    caroGame.handleReset();
+    if (isCaroGame) {
+      caroGame.handleReset();
+      setHasChosenIcon(false);
+      setShowIconSelector(true);
+    } else if (isTicTacToeGame) {
+      ticTacToeGame.handleReset();
+      setHasChosenIcon(false);
+      setShowIconSelector(true);
+    } else if (isSnakeGame) {
+      snakeGame.handleReset();
+    }
     setSelectedCell(undefined);
     setShowResultDialog(false);
     setScoreSubmitted(false);
-    if (isCaroGame || isTicTacToeGame) {
-      setHasChosenIcon(false);
-      setShowIconSelector(true);
-    }
   };
 
   // Initialize board cells from game configuration
   const boardCells = useMemo<BoardCell[][]>(() => {
     if (!game) return [];
+
+    if (isSnakeGame && snakeGame.boardCells.length > 0) {
+      return snakeGame.boardCells;
+    }
 
     // Tic-Tac-Toe game uses its own board cells
     if (isTicTacToeGame && ticTacToeGame.boardCells.length > 0) {
@@ -225,8 +256,10 @@ export const GameDetail = () => {
     game,
     isCaroGame,
     isTicTacToeGame,
+    isSnakeGame,
     caroGame.boardCells,
     ticTacToeGame.boardCells,
+    snakeGame.boardCells,
     selectedCell,
   ]);
 
@@ -328,6 +361,39 @@ export const GameDetail = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shouldContinue, isTicTacToeGame, slug]);
 
+  // Auto-continue for Snake
+  useEffect(() => {
+    const tryContinueSnake = async () => {
+      if (!shouldContinue || !isSnakeGame || !slug) return;
+
+      try {
+        const items = await listGameSaves(slug);
+        if (!items || items.length === 0) {
+          navigate(`/game/${slug}`, { replace: true });
+          return;
+        }
+
+        const latest = items[0];
+        const state = (await loadGameSave(slug, latest.id)) as SnakeGameState;
+
+        if (state.gameStatus !== 'playing') {
+          navigate(`/game/${slug}`, { replace: true });
+          return;
+        }
+
+        snakeGame.restoreState(state);
+        setShowResultDialog(false);
+        setScoreSubmitted(false);
+        setSelectedCell(undefined);
+      } catch {
+        navigate(`/game/${slug}`, { replace: true });
+      }
+    };
+
+    void tryContinueSnake();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldContinue, isSnakeGame, slug]);
+
   // Show result dialog when Caro game ends
   useEffect(() => {
     if (isCaroGame && caroGame.isGameEnded && caroGame.gameState) {
@@ -341,6 +407,12 @@ export const GameDetail = () => {
       setShowResultDialog(true);
     }
   }, [isTicTacToeGame, ticTacToeGame.isGameEnded, ticTacToeGame.gameState]);
+
+  useEffect(() => {
+    if (isSnakeGame && snakeGame.isGameOver && snakeGame.gameState) {
+      setShowResultDialog(true);
+    }
+  }, [isSnakeGame, snakeGame.isGameOver, snakeGame.gameState]);
 
   // Record score for Tic-Tac-Toe when player wins (ranking by number of wins)
   useEffect(() => {
@@ -384,6 +456,25 @@ export const GameDetail = () => {
     }
   }, [isTicTacToeGame, slug, ticTacToeGame.gameState, playerIcon]);
 
+  // Record score and clear saves when Snake game ends
+  useEffect(() => {
+    if (!isSnakeGame || !slug || !snakeGame.gameState || scoreSubmitted) return;
+    if (snakeGame.gameState.gameStatus !== 'game-over') return;
+
+    const finalScore = snakeGame.gameState.score;
+    if (finalScore > 0) {
+      recordGameScore(slug, { movesCount: finalScore, result: 'win' }).catch(() => {
+        // Ignore score errors in UI
+      });
+    }
+
+    clearGameSaves(slug).catch(() => {
+      // Ignore clear errors in UI
+    });
+
+    setScoreSubmitted(true);
+  }, [isSnakeGame, slug, snakeGame.gameState, scoreSubmitted]);
+
   const handleBackToDashboard = () => {
     navigate('/dashboard');
   };
@@ -397,7 +488,8 @@ export const GameDetail = () => {
     // Save Caro or Tic-Tac-Toe state depending on current game
     const caroState = isCaroGame ? caroGame.getSerializableState() : null;
     const tttState = isTicTacToeGame ? ticTacToeGame.gameState : null;
-    const stateToSave = caroState ?? tttState;
+    const snakeState = isSnakeGame ? snakeGame.getSerializableState() : null;
+    const stateToSave = caroState ?? tttState ?? snakeState;
     if (!stateToSave) return;
 
     try {
@@ -426,6 +518,9 @@ export const GameDetail = () => {
     } else if (isTicTacToeGame) {
       ticTacToeGame.handleCellClick(row, col);
       setSelectedCell(undefined);
+    } else if (isSnakeGame) {
+      // Snake board is controlled via keyboard; ignore clicks
+      return;
     } else {
       setSelectedCell({ row, col });
     }
@@ -434,6 +529,11 @@ export const GameDetail = () => {
   // Function button handlers
   const handleLeft = () => {
     if (showInstructions || showResultDialog) return;
+
+    if (isSnakeGame) {
+      snakeGame.changeDirection('left');
+      return;
+    }
 
     if (isCaroGame) {
       // For Caro game, navigate selected cell left
@@ -458,6 +558,11 @@ export const GameDetail = () => {
   const handleRight = () => {
     if (showInstructions || showResultDialog) return;
 
+    if (isSnakeGame) {
+      snakeGame.changeDirection('right');
+      return;
+    }
+
     if (isCaroGame) {
       // For Caro game, navigate selected cell right
       if (selectedCell && game) {
@@ -480,6 +585,11 @@ export const GameDetail = () => {
 
   const handleUp = () => {
     if (showInstructions || showResultDialog) return;
+
+    if (isSnakeGame) {
+      snakeGame.changeDirection('up');
+      return;
+    }
 
     if (isCaroGame) {
       // For Caro game, navigate selected cell up
@@ -504,6 +614,11 @@ export const GameDetail = () => {
   const handleDown = () => {
     if (showInstructions || showResultDialog) return;
 
+    if (isSnakeGame) {
+      snakeGame.changeDirection('down');
+      return;
+    }
+
     if (isCaroGame) {
       // For Caro game, navigate selected cell down
       if (selectedCell && game) {
@@ -526,6 +641,10 @@ export const GameDetail = () => {
 
   const handleEnter = () => {
     if (showInstructions || showResultDialog) return;
+
+    if (isSnakeGame) {
+      return;
+    }
 
     if (isCaroGame) {
       // For Caro game, make move if cell is selected and game is active
@@ -705,6 +824,73 @@ export const GameDetail = () => {
                 )}
               </Box>
             )}
+            {isSnakeGame && snakeGame.gameState && (
+              <Box sx={{ mb: 2, textAlign: 'center' }}>
+                <Typography variant="h6" gutterBottom>
+                  {snakeGame.getStatusMessage()}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Điểm hiện tại: {snakeScore}
+                </Typography>
+                <Box sx={{ mt: 1, display: 'flex', justifyContent: 'center', gap: 1 }}>
+                  {!snakeGame.isGameOver && (
+                    <Button
+                      variant={snakeGame.isPaused ? 'contained' : 'outlined'}
+                      color={snakeGame.isPaused ? 'primary' : 'inherit'}
+                      startIcon={snakeGame.isPaused ? <PlayArrowIcon /> : <PauseIcon />}
+                      size="small"
+                      onClick={() => {
+                        if (snakeGame.isPaused) {
+                          snakeGame.handleResume();
+                        } else {
+                          snakeGame.handlePause();
+                        }
+                      }}
+                    >
+                      {snakeGame.isPaused ? 'Tiếp tục' : 'Tạm dừng'}
+                    </Button>
+                  )}
+                  <Button
+                    variant={snakeGame.isPaused ? 'contained' : 'outlined'}
+                    color={snakeGame.isPaused ? 'success' : 'inherit'}
+                    startIcon={<SaveIcon />}
+                    size="small"
+                    onClick={handleSaveGame}
+                    disabled={saving || snakeGame.isGameOver}
+                  >
+                    {saving ? 'Đang lưu...' : 'Lưu ván'}
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<RefreshIcon />}
+                    onClick={() => {
+                      snakeGame.handleReset();
+                      setScoreSubmitted(false);
+                      setShowResultDialog(false);
+                      setSelectedCell(undefined);
+                    }}
+                  >
+                    Reset
+                  </Button>
+                  {snakeGame.isGameOver && (
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<ArrowBackIcon />}
+                      onClick={handleBackToDashboard}
+                    >
+                      Quay lại
+                    </Button>
+                  )}
+                </Box>
+                {saveError && (
+                  <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
+                    {saveError}
+                  </Typography>
+                )}
+              </Box>
+            )}
             {game && boardCells.length > 0 && (
               <>
                 <GameBoard
@@ -714,16 +900,19 @@ export const GameDetail = () => {
                   selectedCell={selectedCell}
                   onCellClick={handleCellClick}
                   disabled={
-                    isCaroGame
-                      ? caroGame.isGameEnded ||
-                        caroGame.isAITurn ||
-                        caroGame.gameState?.currentPlayer === 'computer'
-                      : isTicTacToeGame
-                        ? ticTacToeGame.isGameEnded ||
-                          ticTacToeGame.gameState?.currentPlayer ===
-                            (playerIcon === 'X' ? 'O' : 'X')
-                        : false
+                    isSnakeGame
+                      ? true
+                      : isCaroGame
+                        ? caroGame.isGameEnded ||
+                          caroGame.isAITurn ||
+                          caroGame.gameState?.currentPlayer === 'computer'
+                        : isTicTacToeGame
+                          ? ticTacToeGame.isGameEnded ||
+                            ticTacToeGame.gameState?.currentPlayer ===
+                              (playerIcon === 'X' ? 'O' : 'X')
+                          : false
                   }
+                  cellSizeMultiplier={isSnakeGame ? 0.7 : 1}
                 />
                 <FunctionButtons
                   onLeft={handleLeft}
@@ -734,10 +923,22 @@ export const GameDetail = () => {
                   onBack={handleBack}
                   onHint={handleHint}
                   disabled={{
-                    left: showInstructions || showResultDialog,
-                    right: showInstructions || showResultDialog,
-                    up: showInstructions || showResultDialog,
-                    down: showInstructions || showResultDialog,
+                    left:
+                      showInstructions ||
+                      showResultDialog ||
+                      (isSnakeGame && (snakeGame.isGameOver || snakeGame.isPaused)),
+                    right:
+                      showInstructions ||
+                      showResultDialog ||
+                      (isSnakeGame && (snakeGame.isGameOver || snakeGame.isPaused)),
+                    up:
+                      showInstructions ||
+                      showResultDialog ||
+                      (isSnakeGame && (snakeGame.isGameOver || snakeGame.isPaused)),
+                    down:
+                      showInstructions ||
+                      showResultDialog ||
+                      (isSnakeGame && (snakeGame.isGameOver || snakeGame.isPaused)),
                     enter:
                       showInstructions ||
                       showResultDialog ||
@@ -784,6 +985,7 @@ export const GameDetail = () => {
           onNewGame={handleNewGameFromResult}
           gameName={game.name}
           score={playerScore}
+          onBackToDashboard={handleBackToDashboard}
         />
       )}
 
@@ -803,6 +1005,19 @@ export const GameDetail = () => {
           onClose={() => setShowResultDialog(false)}
           onNewGame={handleNewGameFromResult}
           gameName={game.name}
+          onBackToDashboard={handleBackToDashboard}
+        />
+      )}
+
+      {isSnakeGame && snakeGame.gameState && (
+        <GameResultDialog
+          open={showResultDialog}
+          gameStatus={snakeGame.gameState.gameStatus === 'game-over' ? 'game-over' : 'playing'}
+          onClose={() => setShowResultDialog(false)}
+          onNewGame={handleNewGameFromResult}
+          gameName={game.name}
+          score={snakeScore}
+          onBackToDashboard={handleBackToDashboard}
         />
       )}
 

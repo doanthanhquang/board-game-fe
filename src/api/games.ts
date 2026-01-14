@@ -4,7 +4,7 @@
  */
 
 import { get, post, del } from '@/api';
-import type { CaroGameState } from '@/types/game-state';
+import type { CaroGameState, SnakeGameState } from '@/types/game-state';
 import type { TicTacToeGameState } from '@/games/tic-tac-toe/tic-tac-toe-game';
 
 /**
@@ -50,6 +50,7 @@ export interface GameRankingEntry {
   user_id: string;
   username: string;
   best_moves: number;
+  best_score?: number;
   wins: number;
   last_win_at: string;
 }
@@ -88,7 +89,7 @@ export interface GameSaveListResponse {
 }
 
 export interface SaveGameStateRequest {
-  gameState: CaroGameState | TicTacToeGameState;
+  gameState: CaroGameState | TicTacToeGameState | SnakeGameState;
   saveName?: string;
 }
 
@@ -107,7 +108,7 @@ export interface LoadGameSaveResponse {
     save_name: string;
     created_at: string;
     updated_at: string;
-    game_state: CaroGameState | TicTacToeGameState;
+    game_state: CaroGameState | TicTacToeGameState | SnakeGameState;
   };
 }
 
@@ -146,12 +147,12 @@ export const recordGameScore = async (
  * Fetch rankings for a game
  * @param slug - Game slug identifier
  * @param scope - 'global' or 'friends'
- * @param sort - 'best_moves' (default) or 'wins'
+ * @param sort - 'best_moves' (default), 'wins', or 'best_score'
  */
 export const getGameRankings = async (
   slug: string,
   scope: 'global' | 'friends' = 'global',
-  sort?: 'best_moves' | 'wins'
+  sort?: 'best_moves' | 'wins' | 'best_score'
 ): Promise<GameRankingEntry[]> => {
   const params: Record<string, string> = { scope };
   if (sort) {
@@ -185,7 +186,7 @@ export const listGameSaves = async (slug: string): Promise<GameSaveSummary[]> =>
 export const loadGameSave = async (
   slug: string,
   saveId: string
-): Promise<CaroGameState | TicTacToeGameState> => {
+): Promise<CaroGameState | TicTacToeGameState | SnakeGameState> => {
   const response = await get<LoadGameSaveResponse>(`/games/${slug}/saves/${saveId}`);
   return response.data.game_state;
 };
