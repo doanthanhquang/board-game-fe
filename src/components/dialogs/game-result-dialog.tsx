@@ -91,7 +91,7 @@ export const GameResultDialog = ({
           {result.title}
         </Typography>
       </DialogTitle>
-      <DialogContent>
+      <DialogContent dividers>
         <Box
           sx={{
             display: 'flex',

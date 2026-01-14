@@ -232,7 +232,7 @@ export const GameMenuDialog = ({
           <CloseIcon />
         </IconButton>
       </DialogTitle>
-      <DialogContent>
+      <DialogContent dividers>
         <List>
           {menuItems.map((item, index) => {
             const IconComponent = item.icon;

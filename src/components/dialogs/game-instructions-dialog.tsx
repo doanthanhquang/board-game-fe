@@ -21,7 +21,7 @@ export const GameInstructionsDialog = ({
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>Hướng dẫn trò chơi</DialogTitle>
-      <DialogContent>
+      <DialogContent dividers>
         <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-line' }}>
           {instructions || 'Chưa có hướng dẫn cho trò chơi này.'}
         </Typography>

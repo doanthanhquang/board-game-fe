@@ -44,7 +44,7 @@ export const GameIconSelectorDialog = ({
           Chọn Icon của bạn
         </Typography>
       </DialogTitle>
-      <DialogContent>
+      <DialogContent dividers>
         <FormControl component="fieldset" sx={{ width: '100%', mt: 2 }}>
           <FormLabel component="legend">Bạn muốn chơi với icon nào?</FormLabel>
           <RadioGroup

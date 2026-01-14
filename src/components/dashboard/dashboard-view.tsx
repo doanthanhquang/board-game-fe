@@ -223,12 +223,12 @@ export const DashboardView = ({
             justifyContent: 'space-between',
           }}
         >
-          <Typography variant="h6">Hướng dẫn trò chơi</Typography>
+          Hướng dẫn trò chơi
           <IconButton aria-label="Close instructions" onClick={onCloseInstructions} size="small">
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <DialogContent>
+        <DialogContent dividers>
           <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-line' }}>
             {instructions || 'Chưa có hướng dẫn cho trò chơi này.'}
           </Typography>
@@ -251,14 +251,14 @@ export const DashboardView = ({
             justifyContent: 'space-between',
           }}
         >
-          <Typography variant="h6">
-            {selectedGame ? `Bảng xếp hạng - ${selectedGame.name}` : 'Bảng xếp hạng'}
-          </Typography>
+          {selectedGame ? `Bảng xếp hạng - ${selectedGame.name}` : 'Bảng xếp hạng'}
           <IconButton aria-label="Close ranking" onClick={onCloseRanking} size="small">
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <DialogContent>{selectedGame && <GameRanking slug={selectedGame.slug} />}</DialogContent>
+        <DialogContent dividers>
+          {selectedGame && <GameRanking slug={selectedGame.slug} />}
+        </DialogContent>
       </Dialog>
 
       {/* Feedback Dialog */}

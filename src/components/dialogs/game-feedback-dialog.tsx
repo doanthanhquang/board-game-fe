@@ -123,9 +123,7 @@ export const GameFeedbackDialog = ({ open, slug, gameName, onClose }: GameFeedba
           justifyContent: 'space-between',
         }}
       >
-        <Typography variant="h6">
-          {gameName ? `Bình luận & đánh giá - ${gameName}` : 'Bình luận & đánh giá'}
-        </Typography>
+        {gameName ? `Bình luận & đánh giá - ${gameName}` : 'Bình luận & đánh giá'}
         <IconButton aria-label="Close feedback" onClick={handleClose} size="small">
           <CloseIcon />
         </IconButton>
