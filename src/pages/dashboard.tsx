@@ -64,11 +64,15 @@ export const Dashboard = () => {
   const handleShowInstructions = (gameInstructions: string | null) => {
     setInstructions(gameInstructions);
     setShowInstructions(true);
+    setShowMenuDialog(false);
   };
 
   const handleCloseInstructions = () => {
     setShowInstructions(false);
     setInstructions(null);
+    if (selectedGame) {
+      setShowMenuDialog(true);
+    }
   };
 
   // Function button handlers for game selection

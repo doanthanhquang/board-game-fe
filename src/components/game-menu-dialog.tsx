@@ -79,7 +79,6 @@ export const GameMenuDialog = ({
   const handleInstruction = () => {
     if (game) {
       onShowInstructions(game.instructions);
-      onClose();
     }
   };
 
