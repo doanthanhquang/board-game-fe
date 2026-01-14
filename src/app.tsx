@@ -1,12 +1,11 @@
-import { useState } from 'react'
-import { Button, TextField, Box, Typography, Stack } from '@mui/material'
-import { Favorite as FavoriteIcon } from '@mui/icons-material'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from 'react';
+import { Button, TextField, Box, Typography, Stack } from '@mui/material';
+import { Favorite as FavoriteIcon } from '@mui/icons-material';
+import reactLogo from './assets/react.svg';
+import viteLogo from '/vite.svg';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [count, setCount] = useState(0);
 
   return (
     <>
@@ -19,7 +18,7 @@ function App() {
         </a>
       </div>
       <h1>Vite + React</h1>
-      
+
       {/* Test Tailwind utilities */}
       <div className="bg-blue-100 p-4 rounded-lg mb-4">
         <p className="text-blue-800 font-semibold">✓ Tailwind CSS is working!</p>
@@ -40,25 +39,17 @@ function App() {
 
       {/* Test both together */}
       <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <Button 
-          variant="outlined" 
-          onClick={() => setCount((count) => count + 1)}
-          className="ml-4"
-        >
+        <button onClick={() => setCount((count) => count + 1)}>count is {count}</button>
+        <Button variant="outlined" onClick={() => setCount((count) => count + 1)} className="ml-4">
           MUI Counter
         </Button>
         <p>
           Edit <code>src/App.tsx</code> and save to test HMR
         </p>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <p className="read-the-docs">Click on the Vite and React logos to learn more</p>
     </>
-  )
+  );
 }
 
-export default App
+export default App;

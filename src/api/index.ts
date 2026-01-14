@@ -3,13 +3,13 @@ import type { QueryParams, RequestConfig } from './types';
 
 /**
  * HTTP GET request
- * 
+ *
  * @template T - The expected response data type
  * @param {string} url - The endpoint URL (relative to base URL)
  * @param {QueryParams} params - Optional query parameters
  * @param {RequestConfig} config - Optional Axios request configuration
  * @returns {Promise<T>} The response data
- * 
+ *
  * @example
  * ```typescript
  * interface User { id: number; name: string; }
@@ -32,14 +32,14 @@ export async function get<T = any>(
 
 /**
  * HTTP POST request
- * 
+ *
  * @template T - The expected response data type
  * @template D - The request body data type
  * @param {string} url - The endpoint URL (relative to base URL)
  * @param {D} data - The request body data
  * @param {RequestConfig} config - Optional Axios request configuration
  * @returns {Promise<T>} The response data
- * 
+ *
  * @example
  * ```typescript
  * interface User { id: number; name: string; }
@@ -62,14 +62,14 @@ export async function post<T = any, D = any>(
 
 /**
  * HTTP PUT request
- * 
+ *
  * @template T - The expected response data type
  * @template D - The request body data type
  * @param {string} url - The endpoint URL (relative to base URL)
  * @param {D} data - The request body data
  * @param {RequestConfig} config - Optional Axios request configuration
  * @returns {Promise<T>} The response data
- * 
+ *
  * @example
  * ```typescript
  * interface User { id: number; name: string; }
@@ -91,12 +91,12 @@ export async function put<T = any, D = any>(
 
 /**
  * HTTP DELETE request
- * 
+ *
  * @template T - The expected response data type
  * @param {string} url - The endpoint URL (relative to base URL)
  * @param {RequestConfig} config - Optional Axios request configuration
  * @returns {Promise<T>} The response data (if any)
- * 
+ *
  * @example
  * ```typescript
  * await api.delete('/users/123');
@@ -105,10 +105,7 @@ export async function put<T = any, D = any>(
  * ```
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function del<T = any>(
-  url: string,
-  config?: RequestConfig
-): Promise<T> {
+export async function del<T = any>(url: string, config?: RequestConfig): Promise<T> {
   const response = await apiClient.delete<T>(url, config);
   return response.data;
 }

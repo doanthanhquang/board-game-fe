@@ -1,4 +1,9 @@
-import axios, { AxiosError, type AxiosInstance, type InternalAxiosRequestConfig, type AxiosResponse } from 'axios';
+import axios, {
+  AxiosError,
+  type AxiosInstance,
+  type InternalAxiosRequestConfig,
+  type AxiosResponse,
+} from 'axios';
 import type { ApiError } from './types';
 
 /**
@@ -19,7 +24,7 @@ apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     // Get token from localStorage (adjust based on your auth strategy)
     const token = localStorage.getItem('auth_token');
-    
+
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -49,10 +54,13 @@ apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
     // Log responses in development mode
     if (import.meta.env.DEV) {
-      console.log(`[API Response] ${response.config.method?.toUpperCase()} ${response.config.url}`, {
-        status: response.status,
-        data: response.data,
-      });
+      console.log(
+        `[API Response] ${response.config.method?.toUpperCase()} ${response.config.url}`,
+        {
+          status: response.status,
+          data: response.data,
+        }
+      );
     }
     return response;
   },
@@ -70,7 +78,7 @@ apiClient.interceptors.response.use(
       // Server responded with error status
       const responseData = error.response.data as { message?: string };
       apiError.message = responseData?.message || error.message;
-      
+
       // Handle 401 Unauthorized - could redirect to login
       if (error.response.status === 401) {
         apiError.message = 'Unauthorized. Please log in again.';
