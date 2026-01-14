@@ -157,6 +157,7 @@ export function useCaroGame({
         }
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [enabled, gameState, isAITurn]
   );
 
