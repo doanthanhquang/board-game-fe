@@ -29,6 +29,7 @@ interface GameMenuDialogProps {
   onNewGame: (slug: string) => void;
   onShowInstructions: (instructions: string | null) => void;
   onShowRanking: () => void;
+  onShowComments: () => void;
 }
 
 /**
@@ -42,6 +43,7 @@ export const GameMenuDialog = ({
   onNewGame,
   onShowInstructions,
   onShowRanking,
+  onShowComments,
 }: GameMenuDialogProps) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const menuItemsRef = useRef<(HTMLLIElement | null)[]>([]);
@@ -58,7 +60,13 @@ export const GameMenuDialog = ({
       action: 'instruction',
     },
     { id: 'ranking', label: 'Xếp hạng', icon: EmojiEventsIcon, disabled: false, action: 'ranking' },
-    { id: 'comment', label: 'Bình luận', icon: CommentIcon, disabled: true, action: null },
+    {
+      id: 'comment',
+      label: 'Bình luận & đánh giá',
+      icon: CommentIcon,
+      disabled: false,
+      action: 'comment',
+    },
   ];
 
   // Reset selected index when dialog opens
@@ -90,6 +98,13 @@ export const GameMenuDialog = ({
   const handleInstruction = () => {
     if (game) {
       onShowInstructions(game.instructions);
+    }
+  };
+
+  const handleComments = () => {
+    if (game) {
+      onClose();
+      onShowComments();
     }
   };
 
@@ -126,6 +141,8 @@ export const GameMenuDialog = ({
           onClose();
           onShowRanking();
         }
+      } else if (item.action === 'comment') {
+        handleComments();
       }
     } else if (item?.disabled) {
       handleComingSoon();
@@ -156,6 +173,8 @@ export const GameMenuDialog = ({
           onClose();
           onShowRanking();
         }
+      } else if (item.action === 'comment') {
+        handleComments();
       }
     } else if (item?.disabled) {
       handleComingSoon();

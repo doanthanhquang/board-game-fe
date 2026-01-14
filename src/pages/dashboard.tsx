@@ -19,7 +19,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { getGames, type Game } from '@/api/games';
 import { GameMenuDialog } from '@/components/game-menu-dialog';
 import { FunctionButtons } from '@/components/game-board';
-import { GameRanking } from '@/components';
+import { GameRanking, GameFeedbackDialog } from '@/components';
 
 export const Dashboard = () => {
   const navigate = useNavigate();
@@ -31,6 +31,7 @@ export const Dashboard = () => {
   const [showInstructions, setShowInstructions] = useState(false);
   const [instructions, setInstructions] = useState<string | null>(null);
   const [showRankingDialog, setShowRankingDialog] = useState(false);
+  const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
   const [selectedGameIndex, setSelectedGameIndex] = useState(0);
   const gameCardsRef = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -86,6 +87,20 @@ export const Dashboard = () => {
 
   const handleCloseRanking = () => {
     setShowRankingDialog(false);
+    if (selectedGame) {
+      setShowMenuDialog(true);
+    }
+  };
+
+  const handleShowComments = () => {
+    if (selectedGame) {
+      setShowMenuDialog(false);
+      setShowFeedbackDialog(true);
+    }
+  };
+
+  const handleCloseFeedback = () => {
+    setShowFeedbackDialog(false);
     if (selectedGame) {
       setShowMenuDialog(true);
     }
@@ -304,6 +319,7 @@ export const Dashboard = () => {
         onNewGame={handleNewGame}
         onShowInstructions={handleShowInstructions}
         onShowRanking={handleShowRanking}
+        onShowComments={handleShowComments}
       />
 
       {/* Instructions Dialog */}
@@ -356,6 +372,14 @@ export const Dashboard = () => {
         </DialogTitle>
         <DialogContent>{selectedGame && <GameRanking slug={selectedGame.slug} />}</DialogContent>
       </Dialog>
+
+      {/* Feedback Dialog */}
+      <GameFeedbackDialog
+        open={showFeedbackDialog}
+        slug={selectedGame?.slug ?? null}
+        gameName={selectedGame?.name ?? null}
+        onClose={handleCloseFeedback}
+      />
     </Container>
   );
 };
