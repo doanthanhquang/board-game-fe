@@ -91,18 +91,18 @@ export function useCaroGame({
     // Add small delay for better UX
     const timer = setTimeout(() => {
       try {
-        // Get current board state from ref (most up-to-date)
+        // Lấy state bàn cờ mới nhất từ ref
         const stateForMove = gameStateRef.current;
         if (!stateForMove) {
-          console.error('No game state available for AI move');
+          console.error('Không có trạng thái game cho lượt đi của máy');
           setIsAITurn(false);
           aiProcessingRef.current = false;
           return;
         }
 
-        // Double check it's still computer's turn
+        // Kiểm tra lại có còn đúng lượt của máy hay không
         if (stateForMove.currentPlayer !== 'computer' || stateForMove.gameStatus !== 'playing') {
-          console.log('Game state changed, skipping AI move');
+          console.log('Trạng thái game đã thay đổi, bỏ qua lượt đi của máy');
           setIsAITurn(false);
           aiProcessingRef.current = false;
           return;
@@ -116,13 +116,13 @@ export function useCaroGame({
             setGameState(newState);
             gameStateRef.current = newState;
           } else {
-            console.error('Failed to make AI move: invalid move');
+            console.error('Không thực hiện được nước đi của máy: nước đi không hợp lệ');
           }
         } else {
-          console.error('No valid AI move available');
+          console.error('Không còn nước đi hợp lệ cho máy');
         }
       } catch (error) {
-        console.error('Error making AI move:', error);
+        console.error('Lỗi khi xử lý nước đi của máy:', error);
       } finally {
         // Always reset AI turn flag and processing flag
         setIsAITurn(false);
@@ -170,18 +170,18 @@ export function useCaroGame({
     if (!enabled || !gameState) return null;
 
     if (gameState.gameStatus === 'player-won') {
-      return '🎉 You won!';
+      return '🎉 Bạn đã thắng!';
     }
     if (gameState.gameStatus === 'computer-won') {
-      return '😔 Computer won!';
+      return '😔 Máy đã thắng!';
     }
     if (gameState.gameStatus === 'draw') {
-      return "It's a draw!";
+      return '🤝 Hòa!';
     }
     if (isAITurn) {
-      return 'Computer is thinking...';
+      return 'Máy đang suy nghĩ...';
     }
-    return gameState.currentPlayer === 'player' ? 'Your turn' : "Computer's turn";
+    return gameState.currentPlayer === 'player' ? 'Lượt của bạn' : 'Lượt của máy';
   }, [enabled, gameState, isAITurn]);
 
   // Check if game is ended

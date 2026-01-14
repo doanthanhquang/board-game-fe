@@ -26,12 +26,12 @@ export const AppHeader = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           {currentUser && (
             <Typography variant="body1" component="span">
-              Welcome, {currentUser.username}
+              Xin chào, {currentUser.username}
             </Typography>
           )}
           <ThemeToggle />
           <Button color="inherit" startIcon={<LogoutIcon />} onClick={handleLogout} sx={{ ml: 1 }}>
-            Logout
+            Đăng xuất
           </Button>
         </Box>
       </Toolbar>

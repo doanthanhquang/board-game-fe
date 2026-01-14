@@ -48,14 +48,14 @@ export const Login = () => {
 
     // Validation
     if (!formData.password || (!formData.email && !formData.username)) {
-      setError('Please fill in all fields');
+      setError('Vui lòng điền đầy đủ thông tin');
       setLoading(false);
       return;
     }
 
     // Email format validation if using email
     if (isEmail && formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
-      setError('Please enter a valid email address');
+      setError('Vui lòng nhập đúng định dạng email');
       setLoading(false);
       return;
     }
@@ -69,7 +69,7 @@ export const Login = () => {
       await login(credentials);
       navigate('/dashboard');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
+      setError(err instanceof Error ? err.message : 'Đăng nhập thất bại. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
@@ -90,7 +90,7 @@ export const Login = () => {
             Board Game
           </Typography>
           <Typography component="h2" variant="h5" align="center" gutterBottom>
-            Sign In
+            Đăng nhập
           </Typography>
 
           {error && (
@@ -106,7 +106,7 @@ export const Login = () => {
                 onClick={handleToggleEmailUsername}
                 sx={{ textTransform: 'none' }}
               >
-                Use {isEmail ? 'Username' : 'Email'} instead
+                Sử dụng {isEmail ? 'Tên đăng nhập' : 'Email'} để đăng nhập
               </Button>
             </Box>
 
@@ -116,7 +116,7 @@ export const Login = () => {
                 required
                 fullWidth
                 id="email"
-                label="Email Address"
+                label="Email"
                 name="email"
                 autoComplete="email"
                 autoFocus
@@ -130,7 +130,7 @@ export const Login = () => {
                 required
                 fullWidth
                 id="username"
-                label="Username"
+                label="Tên đăng nhập"
                 name="username"
                 autoComplete="username"
                 autoFocus
@@ -145,7 +145,7 @@ export const Login = () => {
               required
               fullWidth
               name="password"
-              label="Password"
+              label="Mật khẩu"
               type={showPassword ? 'text' : 'password'}
               id="password"
               autoComplete="current-password"
@@ -156,7 +156,7 @@ export const Login = () => {
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton
-                      aria-label="toggle password visibility"
+                      aria-label="Ẩn/hiện mật khẩu"
                       onClick={() => setShowPassword(!showPassword)}
                       edge="end"
                     >
@@ -174,7 +174,7 @@ export const Login = () => {
               sx={{ mt: 3, mb: 2 }}
               disabled={loading}
             >
-              {loading ? <CircularProgress size={24} /> : 'Sign In'}
+              {loading ? <CircularProgress size={24} /> : 'Đăng nhập'}
             </Button>
           </Box>
         </Paper>

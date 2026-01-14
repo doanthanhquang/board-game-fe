@@ -13,12 +13,13 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions,
-  Button,
+  IconButton,
 } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import { getGames, type Game } from '@/api/games';
 import { GameMenuDialog } from '@/components/game-menu-dialog';
 import { FunctionButtons } from '@/components/game-board';
+import { GameRanking } from '@/components';
 
 export const Dashboard = () => {
   const navigate = useNavigate();
@@ -29,6 +30,7 @@ export const Dashboard = () => {
   const [showMenuDialog, setShowMenuDialog] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
   const [instructions, setInstructions] = useState<string | null>(null);
+  const [showRankingDialog, setShowRankingDialog] = useState(false);
   const [selectedGameIndex, setSelectedGameIndex] = useState(0);
   const gameCardsRef = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -61,6 +63,13 @@ export const Dashboard = () => {
     navigate(`/game/${slug}`);
   };
 
+  const handleShowRanking = () => {
+    if (selectedGame) {
+      setShowMenuDialog(false);
+      setShowRankingDialog(true);
+    }
+  };
+
   const handleShowInstructions = (gameInstructions: string | null) => {
     setInstructions(gameInstructions);
     setShowInstructions(true);
@@ -70,6 +79,13 @@ export const Dashboard = () => {
   const handleCloseInstructions = () => {
     setShowInstructions(false);
     setInstructions(null);
+    if (selectedGame) {
+      setShowMenuDialog(true);
+    }
+  };
+
+  const handleCloseRanking = () => {
+    setShowRankingDialog(false);
     if (selectedGame) {
       setShowMenuDialog(true);
     }
@@ -165,12 +181,12 @@ export const Dashboard = () => {
       <Box sx={{ mt: 4, mb: 4 }}>
         <Paper elevation={3} sx={{ padding: 4 }}>
           <Typography variant="h4" component="h1" gutterBottom>
-            Welcome to Board Game
+            Chào mừng đến với Board Game
           </Typography>
 
           <Box sx={{ mt: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <Typography variant="h5" component="h2" gutterBottom>
-              Select a Game
+              Chọn trò chơi
             </Typography>
 
             {loading && (
@@ -187,7 +203,7 @@ export const Dashboard = () => {
 
             {!loading && !error && games.length === 0 && (
               <Alert severity="info" sx={{ my: 2 }}>
-                No games available at the moment.
+                Hiện chưa có trò chơi nào.
               </Alert>
             )}
 
@@ -287,21 +303,58 @@ export const Dashboard = () => {
         onClose={() => setShowMenuDialog(false)}
         onNewGame={handleNewGame}
         onShowInstructions={handleShowInstructions}
+        onShowRanking={handleShowRanking}
       />
 
       {/* Instructions Dialog */}
       <Dialog open={showInstructions} onClose={handleCloseInstructions} maxWidth="md" fullWidth>
-        <DialogTitle>Game Instructions</DialogTitle>
+        <DialogTitle
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <Typography variant="h6">Hướng dẫn trò chơi</Typography>
+          <IconButton
+            aria-label="Close instructions"
+            onClick={handleCloseInstructions}
+            size="small"
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
         <DialogContent>
           <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-line' }}>
-            {instructions || 'No instructions available for this game.'}
+            {instructions || 'Chưa có hướng dẫn cho trò chơi này.'}
           </Typography>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseInstructions} variant="contained">
-            Close
-          </Button>
-        </DialogActions>
+      </Dialog>
+
+      {/* Ranking Dialog */}
+      <Dialog
+        open={showRankingDialog}
+        onClose={handleCloseRanking}
+        maxWidth="md"
+        fullWidth
+        aria-labelledby="ranking-dialog-title"
+      >
+        <DialogTitle
+          id="ranking-dialog-title"
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <Typography variant="h6">
+            {selectedGame ? `Bảng xếp hạng - ${selectedGame.name}` : 'Bảng xếp hạng'}
+          </Typography>
+          <IconButton aria-label="Close ranking" onClick={handleCloseRanking} size="small">
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>{selectedGame && <GameRanking slug={selectedGame.slug} />}</DialogContent>
       </Dialog>
     </Container>
   );

@@ -3,7 +3,7 @@
  * Functions for interacting with game-related endpoints
  */
 
-import { get } from '@/api';
+import { get, post } from '@/api';
 
 /**
  * Game interface matching backend response
@@ -41,6 +41,35 @@ export interface GameResponse {
 }
 
 /**
+ * Ranking entry returned from backend
+ */
+export interface GameRankingEntry {
+  rank: number;
+  user_id: string;
+  username: string;
+  best_moves: number;
+  wins: number;
+  last_win_at: string;
+}
+
+export interface GameRankingResponse {
+  success: boolean;
+  data: GameRankingEntry[];
+}
+
+export interface RecordGameScoreRequest {
+  movesCount: number;
+  result: 'player-won' | 'computer-won' | 'draw' | 'win' | 'loss';
+}
+
+export interface RecordGameScoreResponse {
+  success: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data?: any;
+  message?: string;
+}
+
+/**
  * Fetch all enabled games
  * @returns Promise resolving to array of games
  */
@@ -56,5 +85,30 @@ export const getGames = async (): Promise<Game[]> => {
  */
 export const getGameBySlug = async (slug: string): Promise<Game> => {
   const response = await get<GameResponse>(`/games/${slug}`);
+  return response.data;
+};
+
+/**
+ * Record a game score for a completed game (winner only on backend)
+ * @param slug - Game slug identifier
+ * @param payload - Score payload including movesCount and result
+ */
+export const recordGameScore = async (
+  slug: string,
+  payload: RecordGameScoreRequest
+): Promise<RecordGameScoreResponse> => {
+  return post<RecordGameScoreResponse, RecordGameScoreRequest>(`/games/${slug}/scores`, payload);
+};
+
+/**
+ * Fetch rankings for a game
+ * @param slug - Game slug identifier
+ * @param scope - 'global' or 'friends'
+ */
+export const getGameRankings = async (
+  slug: string,
+  scope: 'global' | 'friends' = 'global'
+): Promise<GameRankingEntry[]> => {
+  const response = await get<GameRankingResponse>(`/games/${slug}/rankings`, { scope });
   return response.data;
 };

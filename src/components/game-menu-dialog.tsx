@@ -4,7 +4,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Button,
   List,
   ListItem,
   ListItemButton,
@@ -12,12 +11,14 @@ import {
   ListItemText,
   Tooltip,
   Typography,
+  IconButton,
 } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import HelpIcon from '@mui/icons-material/Help';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import CommentIcon from '@mui/icons-material/Comment';
+import CloseIcon from '@mui/icons-material/Close';
 import type { Game } from '@/api/games';
 import { FunctionButtons } from '@/components/game-board';
 
@@ -27,6 +28,7 @@ interface GameMenuDialogProps {
   onClose: () => void;
   onNewGame: (slug: string) => void;
   onShowInstructions: (instructions: string | null) => void;
+  onShowRanking: () => void;
 }
 
 /**
@@ -39,23 +41,24 @@ export const GameMenuDialog = ({
   onClose,
   onNewGame,
   onShowInstructions,
+  onShowRanking,
 }: GameMenuDialogProps) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const menuItemsRef = useRef<(HTMLLIElement | null)[]>([]);
 
   // Menu items configuration
   const menuItems = [
-    { id: 'continue', label: 'Continue', icon: PlayArrowIcon, disabled: true, action: null },
-    { id: 'new-game', label: 'New Game', icon: RefreshIcon, disabled: false, action: 'newGame' },
+    { id: 'continue', label: 'Tiếp tục', icon: PlayArrowIcon, disabled: true, action: null },
+    { id: 'new-game', label: 'Ván mới', icon: RefreshIcon, disabled: false, action: 'newGame' },
     {
       id: 'instruction',
-      label: 'Instruction',
+      label: 'Hướng dẫn',
       icon: HelpIcon,
       disabled: false,
       action: 'instruction',
     },
-    { id: 'ranking', label: 'Ranking', icon: EmojiEventsIcon, disabled: true, action: null },
-    { id: 'comment', label: 'Comment', icon: CommentIcon, disabled: true, action: null },
+    { id: 'ranking', label: 'Xếp hạng', icon: EmojiEventsIcon, disabled: false, action: 'ranking' },
+    { id: 'comment', label: 'Bình luận', icon: CommentIcon, disabled: true, action: null },
   ];
 
   // Reset selected index when dialog opens
@@ -91,8 +94,7 @@ export const GameMenuDialog = ({
   };
 
   const handleComingSoon = () => {
-    // Show "Coming Soon" message - could be enhanced with a snackbar or alert
-    console.log('Coming soon feature');
+    // Placeholder for future features
   };
 
   // Function button handlers
@@ -119,6 +121,11 @@ export const GameMenuDialog = ({
         handleNewGame();
       } else if (item.action === 'instruction') {
         handleInstruction();
+      } else if (item.action === 'ranking') {
+        if (game) {
+          onClose();
+          onShowRanking();
+        }
       }
     } else if (item?.disabled) {
       handleComingSoon();
@@ -144,6 +151,11 @@ export const GameMenuDialog = ({
         handleNewGame();
       } else if (item.action === 'instruction') {
         handleInstruction();
+      } else if (item.action === 'ranking') {
+        if (game) {
+          onClose();
+          onShowRanking();
+        }
       }
     } else if (item?.disabled) {
       handleComingSoon();
@@ -166,10 +178,19 @@ export const GameMenuDialog = ({
         },
       }}
     >
-      <DialogTitle>
+      <DialogTitle
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
         <Typography variant="h5" component="div" fontWeight="bold">
           {game.name}
         </Typography>
+        <IconButton aria-label="Close menu" onClick={onClose} size="small">
+          <CloseIcon />
+        </IconButton>
       </DialogTitle>
       <DialogContent>
         <List>
@@ -179,7 +200,7 @@ export const GameMenuDialog = ({
             const isDisabled = item.disabled;
 
             return (
-              <Tooltip key={item.id} title={isDisabled ? 'Coming Soon' : ''} placement="right">
+              <Tooltip key={item.id} title={isDisabled ? 'Sắp ra mắt' : ''} placement="right">
                 <span>
                   <ListItem
                     disablePadding
@@ -240,9 +261,6 @@ export const GameMenuDialog = ({
             hint: false,
           }}
         />
-        <Button onClick={onClose} variant="outlined" sx={{ ml: 2 }}>
-          Cancel
-        </Button>
       </DialogActions>
     </Dialog>
   );

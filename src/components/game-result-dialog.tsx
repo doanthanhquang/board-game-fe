@@ -18,6 +18,7 @@ interface GameResultDialogProps {
   onClose: () => void;
   onNewGame?: () => void;
   gameName?: string;
+  score?: number;
 }
 
 /**
@@ -29,7 +30,8 @@ export const GameResultDialog = ({
   gameStatus,
   onClose,
   onNewGame,
-  gameName = 'Game',
+  gameName = 'Trò chơi',
+  score,
 }: GameResultDialogProps) => {
   const isGameEnded = gameStatus !== 'playing';
 
@@ -106,6 +108,11 @@ export const GameResultDialog = ({
           {gameName && (
             <Typography variant="body2" color="text.secondary">
               {gameName}
+            </Typography>
+          )}
+          {gameStatus === 'player-won' && typeof score === 'number' && score > 0 && (
+            <Typography variant="h6" color="success.main">
+              Điểm của bạn: {score}
             </Typography>
           )}
         </Box>

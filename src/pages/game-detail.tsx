@@ -22,7 +22,7 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import HelpIcon from '@mui/icons-material/Help';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import { getGameBySlug, type Game } from '@/api/games';
+import { getGameBySlug, type Game, recordGameScore } from '@/api/games';
 import { GameBoard, FunctionButtons } from '@/components/game-board';
 import { GameResultDialog } from '@/components/game-result-dialog';
 import type { BoardCell } from '@/types/board';
@@ -41,6 +41,7 @@ export const GameDetail = () => {
   const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | undefined>(
     undefined
   );
+  const [scoreSubmitted, setScoreSubmitted] = useState(false);
   const isCaroGame = game?.slug === 'caro-4';
 
   // Use caro game hook
@@ -51,6 +52,22 @@ export const GameDetail = () => {
     playerIcon: playerIcon,
   });
 
+  // Live player score (number of player moves in current game)
+  const playerScore = useMemo(() => {
+    if (!isCaroGame || !caroGame.gameState) return 0;
+
+    const board = caroGame.gameState.board;
+    let movesCount = 0;
+    for (let row = 0; row < board.length; row++) {
+      for (let col = 0; col < board[row].length; col++) {
+        if (board[row][col] === 'player') {
+          movesCount++;
+        }
+      }
+    }
+    return movesCount;
+  }, [isCaroGame, caroGame.gameState]);
+
   // Show icon selector when caro game is first loaded
   useEffect(() => {
     if (isCaroGame && game && !showIconSelector && !caroGame.gameState) {
@@ -58,10 +75,42 @@ export const GameDetail = () => {
     }
   }, [isCaroGame, game, showIconSelector, caroGame.gameState]);
 
+  // Submit score when player wins (Caro only)
+  useEffect(() => {
+    if (
+      !isCaroGame ||
+      !game ||
+      !caroGame.gameState ||
+      scoreSubmitted ||
+      caroGame.gameState.gameStatus !== 'player-won'
+    ) {
+      return;
+    }
+
+    const board = caroGame.gameState.board;
+    let movesCount = 0;
+    for (let row = 0; row < board.length; row++) {
+      for (let col = 0; col < board[row].length; col++) {
+        if (board[row][col] === 'player') {
+          movesCount++;
+        }
+      }
+    }
+
+    if (movesCount > 0 && slug) {
+      recordGameScore(slug, { movesCount, result: 'player-won' }).catch(() => {
+        // Ignore score errors in UI
+      });
+      setScoreSubmitted(true);
+    }
+  }, [isCaroGame, game, caroGame.gameState, scoreSubmitted, slug, caroGame]);
+
+  // Reset for new game from result dialog
   const handleNewGameFromResult = () => {
     caroGame.handleReset();
     setSelectedCell(undefined);
     setShowResultDialog(false);
+    setScoreSubmitted(false);
     if (isCaroGame) {
       setShowIconSelector(true);
     }
@@ -303,14 +352,14 @@ export const GameDetail = () => {
         <Box sx={{ mt: 4, mb: 4 }}>
           <Paper elevation={3} sx={{ padding: 4 }}>
             <Alert severity="error" sx={{ mb: 2 }}>
-              {error || 'Game not found'}
+              {error || 'Không tìm thấy trò chơi'}
             </Alert>
             <Button
               variant="contained"
               startIcon={<ArrowBackIcon />}
               onClick={handleBackToDashboard}
             >
-              Back to Dashboard
+              Quay lại trang chính
             </Button>
           </Paper>
         </Box>
@@ -329,7 +378,7 @@ export const GameDetail = () => {
               onClick={handleBackToDashboard}
               sx={{ mb: 2 }}
             >
-              Back to Dashboard
+              Quay lại trang chính
             </Button>
           </Box>
 
@@ -359,11 +408,14 @@ export const GameDetail = () => {
                 <Typography variant="h6" gutterBottom>
                   {caroGame.getStatusMessage()}
                 </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Điểm hiện tại: {playerScore}
+                </Typography>
                 {caroGame.isGameEnded && (
                   <Button
                     variant="contained"
                     startIcon={<RefreshIcon />}
-                    onClick={caroGame.handleReset}
+                    onClick={handleNewGameFromResult}
                     sx={{ mt: 1 }}
                   >
                     New Game
@@ -415,10 +467,10 @@ export const GameDetail = () => {
       </Box>
 
       <Dialog open={showInstructions} onClose={handleToggleInstructions} maxWidth="md" fullWidth>
-        <DialogTitle>Game Instructions</DialogTitle>
+        <DialogTitle>Hướng dẫn trò chơi</DialogTitle>
         <DialogContent>
           <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-line' }}>
-            {game.instructions || 'No instructions available for this game.'}
+            {game.instructions || 'Chưa có hướng dẫn cho trò chơi này.'}
           </Typography>
         </DialogContent>
         <DialogActions>
@@ -508,6 +560,7 @@ export const GameDetail = () => {
           onClose={() => setShowResultDialog(false)}
           onNewGame={handleNewGameFromResult}
           gameName={game.name}
+          score={playerScore}
         />
       )}
     </Container>
