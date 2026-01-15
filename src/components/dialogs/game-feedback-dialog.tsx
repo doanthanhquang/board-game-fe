@@ -39,6 +39,7 @@ export const GameFeedbackDialog = ({ open, slug, gameName, onClose }: GameFeedba
   const [total, setTotal] = useState(0);
   const [loadingList, setLoadingList] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
@@ -62,7 +63,7 @@ export const GameFeedbackDialog = ({ open, slug, gameName, onClose }: GameFeedba
       }
     };
     void fetchRatings();
-  }, [open, slug, page, pageSize]);
+  }, [open, slug, page, pageSize, refreshTrigger]);
 
   const resetForm = () => {
     setRating(5);
@@ -97,6 +98,7 @@ export const GameFeedbackDialog = ({ open, slug, gameName, onClose }: GameFeedba
       });
       // Refresh list from first page to show newest comment
       setPage(1);
+      setRefreshTrigger((prev) => prev + 1); // Force reload list
       resetForm();
     } catch (err) {
       const message =
