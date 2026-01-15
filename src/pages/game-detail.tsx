@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Box,
@@ -64,6 +64,7 @@ export const GameDetail = () => {
   const isMatch3Game = game?.slug === 'match-3';
   const targetInRow = game?.slug === 'caro-5' ? 5 : 4;
   const shouldContinue = searchParams.get('continue') === '1';
+  const gameBoardRef = useRef<HTMLDivElement>(null);
 
   // Use caro game hook
   const caroGame = useCaroGame({
@@ -478,6 +479,21 @@ export const GameDetail = () => {
       setShowResultDialog(true);
     }
   }, [isMatch3Game, match3Game.isGameEnded, match3Game.gameState]);
+
+  // Auto-scroll game board to center when game is loaded
+  useEffect(() => {
+    if (game && boardCells.length > 0 && gameBoardRef.current) {
+      // Use setTimeout to ensure DOM is fully rendered
+      const timer = setTimeout(() => {
+        gameBoardRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+          inline: 'center',
+        });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [game, boardCells.length]);
 
   // Record score for Tic-Tac-Toe when player wins (ranking by number of wins)
   useEffect(() => {
@@ -1058,33 +1074,35 @@ export const GameDetail = () => {
             )}
             {game && boardCells.length > 0 && (
               <>
-                <GameBoard
-                  width={game.default_board_width}
-                  height={game.default_board_height}
-                  cells={boardCells}
-                  selectedCell={selectedCell}
-                  onCellClick={handleCellClick}
-                  onCellDragStart={isMatch3Game ? match3Game.handleTileDragStart : undefined}
-                  onCellDragEnd={isMatch3Game ? match3Game.handleTileDragEnd : undefined}
-                  onCellDragOver={isMatch3Game ? match3Game.handleTileDragOver : undefined}
-                  onCellDrop={isMatch3Game ? match3Game.handleTileDrop : undefined}
-                  disabled={
-                    isSnakeGame
-                      ? true
-                      : isMatch3Game
-                        ? match3Game.isGameEnded
-                        : isCaroGame
-                          ? caroGame.isGameEnded ||
-                            caroGame.isAITurn ||
-                            caroGame.gameState?.currentPlayer === 'computer'
-                          : isTicTacToeGame
-                            ? ticTacToeGame.isGameEnded ||
-                              ticTacToeGame.gameState?.currentPlayer ===
-                                (playerIcon === 'X' ? 'O' : 'X')
-                            : false
-                  }
-                  cellSizeMultiplier={isSnakeGame ? 0.7 : isMatch3Game ? 0.9 : 1}
-                />
+                <Box ref={gameBoardRef}>
+                  <GameBoard
+                    width={game.default_board_width}
+                    height={game.default_board_height}
+                    cells={boardCells}
+                    selectedCell={selectedCell}
+                    onCellClick={handleCellClick}
+                    onCellDragStart={isMatch3Game ? match3Game.handleTileDragStart : undefined}
+                    onCellDragEnd={isMatch3Game ? match3Game.handleTileDragEnd : undefined}
+                    onCellDragOver={isMatch3Game ? match3Game.handleTileDragOver : undefined}
+                    onCellDrop={isMatch3Game ? match3Game.handleTileDrop : undefined}
+                    disabled={
+                      isSnakeGame
+                        ? true
+                        : isMatch3Game
+                          ? match3Game.isGameEnded
+                          : isCaroGame
+                            ? caroGame.isGameEnded ||
+                              caroGame.isAITurn ||
+                              caroGame.gameState?.currentPlayer === 'computer'
+                            : isTicTacToeGame
+                              ? ticTacToeGame.isGameEnded ||
+                                ticTacToeGame.gameState?.currentPlayer ===
+                                  (playerIcon === 'X' ? 'O' : 'X')
+                              : false
+                    }
+                    cellSizeMultiplier={isSnakeGame ? 0.7 : isMatch3Game ? 0.9 : 1}
+                  />
+                </Box>
                 <FunctionButtons
                   onLeft={handleLeft}
                   onRight={handleRight}
