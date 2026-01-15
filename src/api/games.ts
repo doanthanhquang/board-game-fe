@@ -4,7 +4,12 @@
  */
 
 import { get, post, del } from '@/api';
-import type { CaroGameState, SnakeGameState, Match3GameState } from '@/types/game-state';
+import type {
+  CaroGameState,
+  SnakeGameState,
+  Match3GameState,
+  MemoryGameState,
+} from '@/types/game-state';
 import type { TicTacToeGameState } from '@/games/tic-tac-toe/tic-tac-toe-game';
 
 /**
@@ -89,7 +94,12 @@ export interface GameSaveListResponse {
 }
 
 export interface SaveGameStateRequest {
-  gameState: CaroGameState | TicTacToeGameState | SnakeGameState | Match3GameState;
+  gameState:
+    | CaroGameState
+    | TicTacToeGameState
+    | SnakeGameState
+    | Match3GameState
+    | MemoryGameState;
   saveName?: string;
 }
 
@@ -186,7 +196,9 @@ export const listGameSaves = async (slug: string): Promise<GameSaveSummary[]> =>
 export const loadGameSave = async (
   slug: string,
   saveId: string
-): Promise<CaroGameState | TicTacToeGameState | SnakeGameState | Match3GameState> => {
+): Promise<
+  CaroGameState | TicTacToeGameState | SnakeGameState | Match3GameState | MemoryGameState
+> => {
   const response = await get<LoadGameSaveResponse>(`/games/${slug}/saves/${saveId}`);
   return response.data.game_state;
 };

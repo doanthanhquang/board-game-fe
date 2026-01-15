@@ -10,11 +10,11 @@ import {
 import CelebrationIcon from '@mui/icons-material/Celebration';
 import SentimentVeryDissatisfiedIcon from '@mui/icons-material/SentimentVeryDissatisfied';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-import type { GameStatus, Match3GameStatus } from '@/types/game-state';
+import type { GameStatus, Match3GameStatus, MemoryGameStatus } from '@/types/game-state';
 
 interface GameResultDialogProps {
   open: boolean;
-  gameStatus: GameStatus | 'game-over' | Match3GameStatus;
+  gameStatus: GameStatus | 'game-over' | Match3GameStatus | MemoryGameStatus;
   onClose: () => void;
   onNewGame?: () => void;
   gameName?: string;
@@ -86,6 +86,13 @@ export const GameResultDialog = ({
           message: 'Không còn nước đi hợp lệ, hãy thử lại!',
           icon: <SentimentVeryDissatisfiedIcon sx={{ fontSize: 80, color: 'error.main' }} />,
           color: 'error',
+        };
+      case 'completed':
+        return {
+          title: '🎉 Hoàn thành!',
+          message: 'Bạn đã tìm thấy tất cả các cặp thẻ!',
+          icon: <CelebrationIcon sx={{ fontSize: 80, color: 'success.main' }} />,
+          color: 'success',
         };
       default:
         return null;

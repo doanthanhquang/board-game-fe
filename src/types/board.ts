@@ -15,6 +15,11 @@ export interface BoardCell {
   isMatched?: boolean; // Tile is part of a match (will be removed)
   isDragging?: boolean; // Tile is being dragged
   isKeyboardPosition?: boolean; // Tile is at keyboard navigation position
+  // Properties for Memory Card game
+  isFlipped?: boolean; // Card is face-up (flipped)
+  isRemoved?: boolean; // Card has been removed (matched)
+  cardValue?: number | null; // Card value (shown when flipped)
+  cardColor?: string | null; // Card's actual color (based on value, doesn't change when flipped)
 }
 
 /**

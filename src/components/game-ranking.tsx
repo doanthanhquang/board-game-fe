@@ -18,6 +18,7 @@ export const GameRanking = ({ slug }: GameRankingProps) => {
   const isTicTacToe = slug === 'tic-tac-toe';
   const isSnakeGame = slug === 'snake';
   const isMatch3Game = slug === 'match-3';
+  const isMemoryGame = slug === 'memory-game';
 
   useEffect(() => {
     const fetchRankings = async () => {
@@ -26,13 +27,40 @@ export const GameRanking = ({ slug }: GameRankingProps) => {
       try {
         setLoading(true);
         setError(null);
+        // For Memory Game, fetch with wins sort first, then we'll sort by wins/moves
         const sort = isTicTacToe
           ? 'wins'
           : isSnakeGame || isMatch3Game
             ? 'best_score'
-            : 'best_moves';
+            : isMemoryGame
+              ? 'wins' // Fetch with wins sort, then sort by wins/moves combination
+              : 'best_moves';
         const data = await getGameRankings(slug, rankingTab, sort);
-        setRankings(data);
+
+        // For Memory Game, sort by wins first, then by moves if wins are equal or 0
+        if (isMemoryGame) {
+          const sortedData = [...data].sort((a, b) => {
+            // First sort by wins (descending)
+            if (a.wins !== b.wins) {
+              return (b.wins || 0) - (a.wins || 0);
+            }
+            // If wins are equal or both 0, sort by moves (ascending - fewer moves is better)
+            // But if one has wins and other doesn't, wins takes priority
+            if ((a.wins || 0) === 0 && (b.wins || 0) === 0) {
+              // Both have 0 wins, sort by moves (ascending)
+              return (a.best_moves || Infinity) - (b.best_moves || Infinity);
+            }
+            // If wins are equal and > 0, keep original order (or could sort by score)
+            return 0;
+          });
+          // Reassign ranks after sorting
+          sortedData.forEach((entry, index) => {
+            entry.rank = index + 1;
+          });
+          setRankings(sortedData);
+        } else {
+          setRankings(data);
+        }
       } catch (err) {
         const message =
           err instanceof Error ? err.message : 'Failed to load rankings. Please try again.';
@@ -43,7 +71,7 @@ export const GameRanking = ({ slug }: GameRankingProps) => {
     };
 
     fetchRankings();
-  }, [slug, rankingTab, isTicTacToe, isSnakeGame, isMatch3Game]);
+  }, [slug, rankingTab, isTicTacToe, isSnakeGame, isMatch3Game, isMemoryGame]);
 
   return (
     <Box>
@@ -106,6 +134,15 @@ export const GameRanking = ({ slug }: GameRankingProps) => {
                 <Box component="th" sx={{ width: '40%', textAlign: 'center !important' }}>
                   Số điểm
                 </Box>
+              ) : isMemoryGame ? (
+                <>
+                  <Box component="th" sx={{ width: '20%', textAlign: 'center !important' }}>
+                    Số điểm
+                  </Box>
+                  <Box component="th" sx={{ width: '20%', textAlign: 'center !important' }}>
+                    Số lần thắng
+                  </Box>
+                </>
               ) : (
                 <>
                   {!isTicTacToe && (
@@ -113,7 +150,7 @@ export const GameRanking = ({ slug }: GameRankingProps) => {
                       Số nước đi tốt nhất
                     </Box>
                   )}
-                  {!isSnakeGame && !isMatch3Game && (
+                  {!isSnakeGame && !isMatch3Game && !isMemoryGame && (
                     <Box component="th" sx={{ width: '25%', textAlign: 'center !important' }}>
                       Số trận thắng
                     </Box>
@@ -133,6 +170,15 @@ export const GameRanking = ({ slug }: GameRankingProps) => {
                   <Box component="td" sx={{ textAlign: 'center' }}>
                     {entry.best_score ?? 0}
                   </Box>
+                ) : isMemoryGame ? (
+                  <>
+                    <Box component="td" sx={{ textAlign: 'center' }}>
+                      {entry.best_score ?? 0}
+                    </Box>
+                    <Box component="td" sx={{ textAlign: 'center' }}>
+                      {entry.wins ?? 0}
+                    </Box>
+                  </>
                 ) : (
                   <>
                     {!isTicTacToe && (
@@ -140,7 +186,7 @@ export const GameRanking = ({ slug }: GameRankingProps) => {
                         {entry.best_moves}
                       </Box>
                     )}
-                    {!isSnakeGame && !isMatch3Game && (
+                    {!isSnakeGame && !isMatch3Game && !isMemoryGame && (
                       <Box component="td" sx={{ textAlign: 'center' }}>
                         {entry.wins}
                       </Box>

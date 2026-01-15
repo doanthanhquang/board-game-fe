@@ -66,8 +66,8 @@ export const BoardCell = memo(
         // Food gets bright warning color border for maximum visibility
         return theme.palette.warning.dark;
       }
-      if (cell.isKeyboardPosition && hasPiece) {
-        // Keyboard position gets bright primary color border
+      if (cell.isKeyboardPosition && (hasPiece || cell.isFlipped !== undefined)) {
+        // Keyboard position gets bright primary color border (for Match 3 or Memory Card)
         return theme.palette.primary.main;
       }
       if (cell.isLastMove) {
@@ -92,10 +92,10 @@ export const BoardCell = memo(
       return theme.palette.divider;
     };
 
-    // Animation styles for Match 3
-    // Priority: swapping > falling > matched > dragging > keyboard position > selected
+    // Animation styles for Match 3 and Memory Card
+    // Priority: swapping > falling > matched > dragging > card flip > keyboard position > selected
     const getAnimationStyle = () => {
-      // Highest priority: swapping animation
+      // Highest priority: swapping animation (Match 3)
       if (cell.isSwapping) {
         return {
           transform: 'scale(0.9)',
@@ -103,7 +103,7 @@ export const BoardCell = memo(
           zIndex: 10,
         };
       }
-      // Second priority: falling animation
+      // Second priority: falling animation (Match 3)
       if (cell.isFalling && cell.fallFromRow !== undefined) {
         const fallDistance = (cell.fallFromRow - cell.row) * (size + 4); // 4px gap
         return {
@@ -112,16 +112,17 @@ export const BoardCell = memo(
           zIndex: 5,
         };
       }
-      // Third priority: matched (removal) animation
-      if (cell.isMatched) {
+      // Third priority: matched animation (Match 3 only - Memory Card keeps cards visible)
+      if (cell.isMatched && cell.isRemoved) {
+        // Only animate removal for Match 3 (isRemoved = true)
         return {
           transform: 'scale(0) rotate(180deg)',
           opacity: 0,
-          transition: 'transform 0.3s ease-in-out, opacity 0.3s ease-in-out',
+          transition: 'transform 0.4s ease-in-out, opacity 0.4s ease-in-out',
           zIndex: 1,
         };
       }
-      // Fourth priority: dragging animation
+      // Fourth priority: dragging animation (Match 3)
       if (cell.isDragging) {
         return {
           opacity: 0.6,
@@ -131,15 +132,45 @@ export const BoardCell = memo(
           cursor: 'grabbing',
         };
       }
-      // Fifth priority: keyboard position (always highlight when navigating)
-      if (cell.isKeyboardPosition && hasPiece) {
+      // Fifth priority: card flip animation (Memory Card)
+      // Don't use rotateY for card container to avoid hiding text
+      // Use scale or opacity instead for smooth flip effect
+      if (cell.isFlipped !== undefined) {
+        if (cell.isFlipped) {
+          // Card is face-up (flipped) - use scale for smooth effect without hiding text
+          return {
+            transform: 'scale(1)',
+            transition: 'transform 0.4s ease-in-out',
+            zIndex: 2,
+          };
+        } else {
+          // Card is face-down (not flipped)
+          return {
+            transform: 'scale(0.98)',
+            transition: 'transform 0.4s ease-in-out',
+            zIndex: 1,
+          };
+        }
+      }
+      // Sixth priority: removed card (Memory Card)
+      if (cell.isRemoved) {
         return {
-          transform: 'scale(1.25)',
+          opacity: 0,
+          transform: 'scale(0)',
+          transition: 'opacity 0.4s ease-in-out, transform 0.4s ease-in-out',
+          zIndex: 0,
+        };
+      }
+      // Seventh priority: keyboard position (always highlight when navigating)
+      // Keyboard position highlight (for Match 3 or Memory Card)
+      if (cell.isKeyboardPosition && (hasPiece || cell.isFlipped !== undefined)) {
+        return {
+          transform: 'scale(1.15)',
           transition: 'transform 0.15s ease-in-out',
           zIndex: 3,
         };
       }
-      // Sixth priority: selected tile (for swap)
+      // Eighth priority: selected tile (for swap)
       if (cell.selected && hasPiece) {
         return {
           transform: 'scale(1.15)',
@@ -160,8 +191,8 @@ export const BoardCell = memo(
       backgroundColor,
       border: cell.isFood
         ? '4px solid' // Thick border for food
-        : cell.isKeyboardPosition && hasPiece
-          ? '3px solid' // Thick border for keyboard position
+        : cell.isKeyboardPosition && (hasPiece || cell.isFlipped !== undefined)
+          ? '3px solid' // Thick border for keyboard position (Match 3 or Memory Card)
           : cell.isLastMove
             ? '4px solid' // Thicker border for last move
             : cell.selected && !hasPiece
@@ -171,16 +202,17 @@ export const BoardCell = memo(
                 : '1px solid',
       borderColor: getBorderColor(),
       // Keep full opacity for cells with pieces - never reduce it
+      // Memory Card: handle opacity for flip animation
       opacity:
-        cell.isMatched || cell.isDragging
-          ? cell.isMatched
-            ? 0
-            : 0.5
-          : hasPiece
-            ? 1
-            : cell.disabled && !cell.isLastMove
-              ? 0.5
-              : 1,
+        cell.isMatched && cell.isRemoved
+          ? 0
+          : cell.isDragging
+            ? 0.5
+            : hasPiece
+              ? 1
+              : cell.disabled && !cell.isLastMove
+                ? 0.5
+                : 1,
       cursor: cell.disabled ? 'not-allowed' : cell.color ? 'grab' : 'pointer',
       cursorActive: cell.color && !cell.disabled ? 'grabbing' : undefined,
       // Only transition non-color properties for cells with pieces to preserve color
@@ -236,6 +268,45 @@ export const BoardCell = memo(
               }}
             >
               {cell.icon}
+            </Typography>
+          )}
+          {/* Memory Card: Show card value when flipped, or back design when face-down */}
+          {cell.isFlipped !== undefined && (
+            <Typography
+              variant="h6"
+              component="span"
+              sx={{
+                fontWeight: 'bold',
+                color: (() => {
+                  // Simple: black text when flipped, grey question mark when face-down
+                  if (cell.isFlipped && cell.cardValue !== null) {
+                    // Black text on white background
+                    return '#000000';
+                  } else if (cell.isFlipped === false && !cell.isRemoved) {
+                    // Grey question mark when face-down
+                    return theme.palette.text.secondary;
+                  }
+                  // Otherwise transparent
+                  return 'transparent';
+                })(),
+                userSelect: 'none',
+                display: 'inline-block',
+                position: 'relative',
+                zIndex: 10, // Ensure text is above card background
+                // Don't use rotateY for text - it causes hiding issues
+                opacity:
+                  cell.isFlipped && cell.cardValue !== null
+                    ? 1
+                    : cell.isFlipped === false && !cell.isRemoved
+                      ? 1
+                      : 0,
+              }}
+            >
+              {cell.isFlipped && cell.cardValue !== null
+                ? cell.cardValue
+                : cell.isFlipped === false && !cell.isRemoved
+                  ? '?'
+                  : ''}
             </Typography>
           )}
         </IconButton>

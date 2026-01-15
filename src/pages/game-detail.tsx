@@ -33,9 +33,10 @@ import { useCaroGame } from '@/hooks/use-caro-game';
 import { useTicTacToeGame } from '@/hooks/use-tic-tac-toe-game';
 import type { CaroGameState } from '@/types/game-state';
 import type { TicTacToeGameState } from '@/games/tic-tac-toe/tic-tac-toe-game';
-import type { SnakeGameState, Match3GameState } from '@/types/game-state';
+import type { SnakeGameState, Match3GameState, MemoryGameState } from '@/types/game-state';
 import { useSnakeGame } from '@/hooks/use-snake-game';
 import { useMatch3Game } from '@/hooks/use-match-3-game';
+import { useMemoryGame } from '@/hooks/use-memory-game';
 
 export const GameDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -62,6 +63,7 @@ export const GameDetail = () => {
   const isTicTacToeGame = game?.slug === 'tic-tac-toe';
   const isSnakeGame = game?.slug === 'snake';
   const isMatch3Game = game?.slug === 'match-3';
+  const isMemoryGame = game?.slug === 'memory-game';
   const targetInRow = game?.slug === 'caro-5' ? 5 : 4;
   const shouldContinue = searchParams.get('continue') === '1';
   const gameBoardRef = useRef<HTMLDivElement>(null);
@@ -92,6 +94,13 @@ export const GameDetail = () => {
     width: game?.default_board_width || 0,
     height: game?.default_board_height || 0,
     enabled: Boolean(isMatch3Game),
+    timeLimit: game?.default_time_limit || 300,
+  });
+
+  const memoryGame = useMemoryGame({
+    width: game?.default_board_width || 0,
+    height: game?.default_board_height || 0,
+    enabled: Boolean(isMemoryGame),
     timeLimit: game?.default_time_limit || 300,
   });
 
@@ -238,6 +247,10 @@ export const GameDetail = () => {
       return match3Game.boardCells;
     }
 
+    if (isMemoryGame && memoryGame.boardCells.length > 0) {
+      return memoryGame.boardCells;
+    }
+
     // Tic-Tac-Toe game uses its own board cells
     if (isTicTacToeGame && ticTacToeGame.boardCells.length > 0) {
       return ticTacToeGame.boardCells.map((row, rowIndex) =>
@@ -281,10 +294,12 @@ export const GameDetail = () => {
     isTicTacToeGame,
     isSnakeGame,
     isMatch3Game,
+    isMemoryGame,
     caroGame.boardCells,
     ticTacToeGame.boardCells,
     snakeGame.boardCells,
     match3Game.boardCells,
+    memoryGame.boardCells,
     selectedCell,
   ]);
 
@@ -453,6 +468,40 @@ export const GameDetail = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shouldContinue, isMatch3Game, slug]);
 
+  // Auto-continue for Memory Card
+  useEffect(() => {
+    const tryContinueMemory = async () => {
+      if (!shouldContinue || !isMemoryGame || !slug) return;
+
+      try {
+        const items = await listGameSaves(slug);
+        if (!items || items.length === 0) {
+          navigate(`/game/${slug}`, { replace: true });
+          return;
+        }
+
+        const latest = items[0];
+        const loadedState = await loadGameSave(slug, latest.id);
+        const state = loadedState as unknown as MemoryGameState;
+
+        if (state.gameStatus !== 'playing') {
+          navigate(`/game/${slug}`, { replace: true });
+          return;
+        }
+
+        memoryGame.restoreState(state);
+        setShowResultDialog(false);
+        setScoreSubmitted(false);
+        setSelectedCell(undefined);
+      } catch {
+        navigate(`/game/${slug}`, { replace: true });
+      }
+    };
+
+    void tryContinueMemory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldContinue, isMemoryGame, slug]);
+
   // Show result dialog when Caro game ends
   useEffect(() => {
     if (isCaroGame && caroGame.isGameEnded && caroGame.gameState) {
@@ -479,6 +528,34 @@ export const GameDetail = () => {
       setShowResultDialog(true);
     }
   }, [isMatch3Game, match3Game.isGameEnded, match3Game.gameState]);
+
+  // Show result dialog when Memory Card game ends
+  useEffect(() => {
+    if (isMemoryGame && memoryGame.isGameEnded && memoryGame.gameState) {
+      setShowResultDialog(true);
+    }
+  }, [isMemoryGame, memoryGame.isGameEnded, memoryGame.gameState]);
+
+  // Record score and clear saves when Memory Card game ends
+  useEffect(() => {
+    if (!isMemoryGame || !slug || !memoryGame.gameState || scoreSubmitted) return;
+    const status = memoryGame.gameState.gameStatus;
+    if (status !== 'completed' && status !== 'time-up') return;
+
+    const finalScore = memoryGame.gameState.score;
+    // For Memory Card, use score as the ranking metric (not movesCount)
+    if (finalScore > 0) {
+      recordGameScore(slug, { movesCount: finalScore, result: 'win' }).catch(() => {
+        // Ignore score errors in UI
+      });
+    }
+
+    clearGameSaves(slug).catch(() => {
+      // Ignore clear errors in UI
+    });
+
+    setScoreSubmitted(true);
+  }, [isMemoryGame, slug, memoryGame.gameState, scoreSubmitted]);
 
   // Auto-scroll game board to center when game is loaded
   useEffect(() => {
@@ -592,7 +669,8 @@ export const GameDetail = () => {
     const tttState = isTicTacToeGame ? ticTacToeGame.gameState : null;
     const snakeState = isSnakeGame ? snakeGame.getSerializableState() : null;
     const match3State = isMatch3Game ? match3Game.getSerializableState() : null;
-    const stateToSave = caroState ?? tttState ?? snakeState ?? match3State;
+    const memoryState = isMemoryGame ? memoryGame.getSerializableState() : null;
+    const stateToSave = caroState ?? tttState ?? snakeState ?? match3State ?? memoryState;
     if (!stateToSave) return;
 
     try {
@@ -626,6 +704,8 @@ export const GameDetail = () => {
       return;
     } else if (isMatch3Game) {
       match3Game.handleTileClick(row, col);
+    } else if (isMemoryGame) {
+      memoryGame.handleCardClick(row, col);
     } else {
       setSelectedCell({ row, col });
     }
@@ -637,6 +717,16 @@ export const GameDetail = () => {
 
     if (isSnakeGame) {
       snakeGame.changeDirection('left');
+      return;
+    }
+
+    if (isMatch3Game) {
+      match3Game.handleMoveSelection('left');
+      return;
+    }
+
+    if (isMemoryGame) {
+      memoryGame.handleMoveSelection('left');
       return;
     }
 
@@ -678,6 +768,16 @@ export const GameDetail = () => {
       return;
     }
 
+    if (isMemoryGame) {
+      memoryGame.handleMoveSelection('right');
+      return;
+    }
+
+    if (isMatch3Game) {
+      match3Game.handleMoveSelection('right');
+      return;
+    }
+
     if (isCaroGame) {
       // For Caro game, navigate selected cell right
       if (selectedCell && game) {
@@ -703,6 +803,16 @@ export const GameDetail = () => {
 
     if (isSnakeGame) {
       snakeGame.changeDirection('up');
+      return;
+    }
+
+    if (isMatch3Game) {
+      match3Game.handleMoveSelection('up');
+      return;
+    }
+
+    if (isMemoryGame) {
+      memoryGame.handleMoveSelection('up');
       return;
     }
 
@@ -744,6 +854,16 @@ export const GameDetail = () => {
       return;
     }
 
+    if (isMemoryGame) {
+      memoryGame.handleMoveSelection('down');
+      return;
+    }
+
+    if (isMatch3Game) {
+      match3Game.handleMoveSelection('down');
+      return;
+    }
+
     if (isCaroGame) {
       // For Caro game, navigate selected cell down
       if (selectedCell && game) {
@@ -768,6 +888,16 @@ export const GameDetail = () => {
     if (showInstructions || showResultDialog) return;
 
     if (isSnakeGame) {
+      return;
+    }
+
+    if (isMatch3Game) {
+      match3Game.handleSwapSelected();
+      return;
+    }
+
+    if (isMemoryGame) {
+      memoryGame.handleCardSelect();
       return;
     }
 
@@ -1072,6 +1202,54 @@ export const GameDetail = () => {
                 )}
               </Box>
             )}
+            {isMemoryGame && memoryGame.gameState && (
+              <Box sx={{ mb: 2, textAlign: 'center' }}>
+                <Typography variant="h6" gutterBottom>
+                  {memoryGame.getStatusMessage()}
+                </Typography>
+                <Box sx={{ mt: 1, display: 'flex', justifyContent: 'center', gap: 1 }}>
+                  {!memoryGame.isGameEnded && (
+                    <Button
+                      variant="outlined"
+                      startIcon={<SaveIcon />}
+                      size="small"
+                      onClick={handleSaveGame}
+                      disabled={saving}
+                    >
+                      {saving ? 'Đang lưu...' : 'Lưu ván'}
+                    </Button>
+                  )}
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<RefreshIcon />}
+                    onClick={() => {
+                      memoryGame.handleReset();
+                      setScoreSubmitted(false);
+                      setShowResultDialog(false);
+                      setSelectedCell(undefined);
+                    }}
+                  >
+                    Reset
+                  </Button>
+                  {memoryGame.isGameEnded && (
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<ArrowBackIcon />}
+                      onClick={handleBackToDashboard}
+                    >
+                      Quay lại
+                    </Button>
+                  )}
+                </Box>
+                {saveError && (
+                  <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
+                    {saveError}
+                  </Typography>
+                )}
+              </Box>
+            )}
             {game && boardCells.length > 0 && (
               <>
                 <Box ref={gameBoardRef}>
@@ -1090,17 +1268,21 @@ export const GameDetail = () => {
                         ? true
                         : isMatch3Game
                           ? match3Game.isGameEnded
-                          : isCaroGame
-                            ? caroGame.isGameEnded ||
-                              caroGame.isAITurn ||
-                              caroGame.gameState?.currentPlayer === 'computer'
-                            : isTicTacToeGame
-                              ? ticTacToeGame.isGameEnded ||
-                                ticTacToeGame.gameState?.currentPlayer ===
-                                  (playerIcon === 'X' ? 'O' : 'X')
-                              : false
+                          : isMemoryGame
+                            ? memoryGame.isGameEnded
+                            : isCaroGame
+                              ? caroGame.isGameEnded ||
+                                caroGame.isAITurn ||
+                                caroGame.gameState?.currentPlayer === 'computer'
+                              : isTicTacToeGame
+                                ? ticTacToeGame.isGameEnded ||
+                                  ticTacToeGame.gameState?.currentPlayer ===
+                                    (playerIcon === 'X' ? 'O' : 'X')
+                                : false
                     }
-                    cellSizeMultiplier={isSnakeGame ? 0.7 : isMatch3Game ? 0.9 : 1}
+                    cellSizeMultiplier={
+                      isSnakeGame ? 0.7 : isMatch3Game ? 0.9 : isMemoryGame ? 1 : 1
+                    }
                   />
                 </Box>
                 <FunctionButtons
@@ -1116,26 +1298,31 @@ export const GameDetail = () => {
                       showInstructions ||
                       showResultDialog ||
                       (isSnakeGame && (snakeGame.isGameOver || snakeGame.isPaused)) ||
-                      (isMatch3Game && match3Game.isGameEnded),
+                      (isMatch3Game && match3Game.isGameEnded) ||
+                      (isMemoryGame && memoryGame.isGameEnded),
                     right:
                       showInstructions ||
                       showResultDialog ||
                       (isSnakeGame && (snakeGame.isGameOver || snakeGame.isPaused)) ||
-                      (isMatch3Game && match3Game.isGameEnded),
+                      (isMatch3Game && match3Game.isGameEnded) ||
+                      (isMemoryGame && memoryGame.isGameEnded),
                     up:
                       showInstructions ||
                       showResultDialog ||
                       (isSnakeGame && (snakeGame.isGameOver || snakeGame.isPaused)) ||
-                      (isMatch3Game && match3Game.isGameEnded),
+                      (isMatch3Game && match3Game.isGameEnded) ||
+                      (isMemoryGame && memoryGame.isGameEnded),
                     down:
                       showInstructions ||
                       showResultDialog ||
                       (isSnakeGame && (snakeGame.isGameOver || snakeGame.isPaused)) ||
-                      (isMatch3Game && match3Game.isGameEnded),
+                      (isMatch3Game && match3Game.isGameEnded) ||
+                      (isMemoryGame && memoryGame.isGameEnded),
                     enter:
                       showInstructions ||
                       showResultDialog ||
                       (isMatch3Game && match3Game.isGameEnded) ||
+                      (isMemoryGame && memoryGame.isGameEnded) ||
                       (isCaroGame && (caroGame.isGameEnded || caroGame.isAITurn)) ||
                       (isTicTacToeGame &&
                         (ticTacToeGame.isGameEnded ||
@@ -1223,6 +1410,17 @@ export const GameDetail = () => {
           onNewGame={handleNewGameFromResult}
           gameName={game.name}
           score={match3Game.gameState.score}
+          onBackToDashboard={handleBackToDashboard}
+        />
+      )}
+      {isMemoryGame && memoryGame.gameState && (
+        <GameResultDialog
+          open={showResultDialog}
+          gameStatus={memoryGame.gameState.gameStatus}
+          onClose={() => setShowResultDialog(false)}
+          onNewGame={handleNewGameFromResult}
+          gameName={game.name}
+          score={memoryGame.gameState.score}
           onBackToDashboard={handleBackToDashboard}
         />
       )}

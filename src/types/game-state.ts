@@ -55,3 +55,17 @@ export interface Match3GameState {
   boardHeight: number;
   selectedTile: { row: number; col: number } | null;
 }
+
+export type MemoryGameStatus = 'playing' | 'completed' | 'time-up';
+
+export interface MemoryGameState {
+  board: (number | null)[][]; // Card values, null for removed cards
+  flippedCards: { row: number; col: number }[]; // Currently flipped cards (max 2)
+  matchedPairs: number[]; // Card values that have been matched
+  score: number;
+  moves: number; // Number of card flip attempts
+  timeRemaining: number; // Seconds
+  gameStatus: MemoryGameStatus;
+  boardWidth: number;
+  boardHeight: number;
+}
