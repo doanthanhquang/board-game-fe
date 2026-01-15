@@ -40,3 +40,18 @@ export interface SnakeGameState {
   boardWidth: number;
   boardHeight: number;
 }
+
+export type Match3GameStatus = 'playing' | 'time-up' | 'no-moves' | 'game-over';
+
+export type TileColor = 'red' | 'blue' | 'green' | 'yellow' | 'purple' | 'orange';
+
+export interface Match3GameState {
+  board: (TileColor | null)[][];
+  score: number;
+  moves: number;
+  timeRemaining: number; // seconds
+  gameStatus: Match3GameStatus;
+  boardWidth: number;
+  boardHeight: number;
+  selectedTile: { row: number; col: number } | null;
+}

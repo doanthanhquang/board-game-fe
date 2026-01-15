@@ -8,6 +8,13 @@ export interface BoardCell {
   movePlayer?: 'player' | 'computer'; // Which player made the move at this cell
   icon?: 'X' | 'O' | null; // Icon for caro game (X or O)
   isFood?: boolean; // Mark food cell for Snake game
+  // Animation properties for Match 3
+  isSwapping?: boolean; // Tile is being swapped
+  isFalling?: boolean; // Tile is falling down
+  fallFromRow?: number; // Original row before falling
+  isMatched?: boolean; // Tile is part of a match (will be removed)
+  isDragging?: boolean; // Tile is being dragged
+  isKeyboardPosition?: boolean; // Tile is at keyboard navigation position
 }
 
 /**
@@ -34,6 +41,10 @@ export interface GameBoardProps {
   cells: BoardCell[][];
   selectedCell?: { row: number; col: number };
   onCellClick?: (row: number, col: number) => void;
+  onCellDragStart?: (row: number, col: number) => void;
+  onCellDragEnd?: (row: number, col: number) => void;
+  onCellDragOver?: (row: number, col: number) => void;
+  onCellDrop?: (row: number, col: number) => void;
   disabled?: boolean;
   cellSizeMultiplier?: number; // Multiplier for cell size (default: 1, use < 1 for smaller cells)
 }

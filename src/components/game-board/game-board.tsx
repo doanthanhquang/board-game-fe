@@ -11,6 +11,10 @@ export const GameBoard = ({
   cells,
   selectedCell,
   onCellClick,
+  onCellDragStart,
+  onCellDragEnd,
+  onCellDragOver,
+  onCellDrop,
   disabled = false,
   cellSizeMultiplier = 1,
 }: GameBoardProps) => {
@@ -85,6 +89,10 @@ export const GameBoard = ({
                   key={`cell-${cell.row}-${cell.col}`}
                   cell={cell}
                   onClick={onCellClick}
+                  onDragStart={onCellDragStart}
+                  onDragEnd={onCellDragEnd}
+                  onDragOver={onCellDragOver}
+                  onDrop={onCellDrop}
                   size={cellSize}
                 />
               );
@@ -96,6 +104,9 @@ export const GameBoard = ({
                 key={`cell-${cell.row}-${cell.col}`}
                 cell={{ ...cell, selected: isSelected, disabled: computedDisabled }}
                 onClick={onCellClick}
+                onDragStart={onCellDragStart}
+                onDragEnd={onCellDragEnd}
+                onDragOver={onCellDragOver}
                 size={cellSize}
               />
             );

@@ -10,15 +10,16 @@ import {
 import CelebrationIcon from '@mui/icons-material/Celebration';
 import SentimentVeryDissatisfiedIcon from '@mui/icons-material/SentimentVeryDissatisfied';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-import type { GameStatus } from '@/types/game-state';
+import type { GameStatus, Match3GameStatus } from '@/types/game-state';
 
 interface GameResultDialogProps {
   open: boolean;
-  gameStatus: GameStatus | 'game-over';
+  gameStatus: GameStatus | 'game-over' | Match3GameStatus;
   onClose: () => void;
   onNewGame?: () => void;
   gameName?: string;
   score?: number;
+  moves?: number;
   onBackToDashboard?: () => void;
 }
 
@@ -33,6 +34,7 @@ export const GameResultDialog = ({
   onNewGame,
   gameName = 'Trò chơi',
   score,
+  moves,
   onBackToDashboard,
 }: GameResultDialogProps) => {
   const isGameEnded = gameStatus !== 'playing';
@@ -68,6 +70,20 @@ export const GameResultDialog = ({
         return {
           title: '🐍 Game Over',
           message: 'Rắn đã va chạm, hãy thử lại!',
+          icon: <SentimentVeryDissatisfiedIcon sx={{ fontSize: 80, color: 'error.main' }} />,
+          color: 'error',
+        };
+      case 'time-up':
+        return {
+          title: '⏰ Hết giờ!',
+          message: 'Thời gian đã hết, hãy thử lại!',
+          icon: <SentimentVeryDissatisfiedIcon sx={{ fontSize: 80, color: 'error.main' }} />,
+          color: 'error',
+        };
+      case 'no-moves':
+        return {
+          title: '🚫 Hết nước đi!',
+          message: 'Không còn nước đi hợp lệ, hãy thử lại!',
           icon: <SentimentVeryDissatisfiedIcon sx={{ fontSize: 80, color: 'error.main' }} />,
           color: 'error',
         };
@@ -119,12 +135,22 @@ export const GameResultDialog = ({
               {gameName}
             </Typography>
           )}
-          {(gameStatus === 'player-won' || gameStatus === 'game-over') &&
+          {(gameStatus === 'player-won' ||
+            gameStatus === 'game-over' ||
+            gameStatus === 'time-up' ||
+            gameStatus === 'no-moves') &&
             typeof score === 'number' &&
             score > 0 && (
-              <Typography variant="h6" color="success.main">
-                Điểm của bạn: {score}
-              </Typography>
+              <Box>
+                <Typography variant="h6" color="success.main">
+                  Điểm của bạn: {score}
+                </Typography>
+                {typeof moves === 'number' && moves > 0 && (
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                    Số nước đi: {moves}
+                  </Typography>
+                )}
+              </Box>
             )}
         </Box>
       </DialogContent>

@@ -17,6 +17,7 @@ export const GameRanking = ({ slug }: GameRankingProps) => {
   const [error, setError] = useState<string | null>(null);
   const isTicTacToe = slug === 'tic-tac-toe';
   const isSnakeGame = slug === 'snake';
+  const isMatch3Game = slug === 'match-3';
 
   useEffect(() => {
     const fetchRankings = async () => {
@@ -25,7 +26,11 @@ export const GameRanking = ({ slug }: GameRankingProps) => {
       try {
         setLoading(true);
         setError(null);
-        const sort = isTicTacToe ? 'wins' : isSnakeGame ? 'best_score' : 'best_moves';
+        const sort = isTicTacToe
+          ? 'wins'
+          : isSnakeGame || isMatch3Game
+            ? 'best_score'
+            : 'best_moves';
         const data = await getGameRankings(slug, rankingTab, sort);
         setRankings(data);
       } catch (err) {
@@ -38,7 +43,7 @@ export const GameRanking = ({ slug }: GameRankingProps) => {
     };
 
     fetchRankings();
-  }, [slug, rankingTab, isTicTacToe, isSnakeGame]);
+  }, [slug, rankingTab, isTicTacToe, isSnakeGame, isMatch3Game]);
 
   return (
     <Box>
@@ -97,7 +102,7 @@ export const GameRanking = ({ slug }: GameRankingProps) => {
               >
                 Người chơi
               </Box>
-              {isSnakeGame ? (
+              {isSnakeGame || isMatch3Game ? (
                 <Box component="th" sx={{ width: '40%', textAlign: 'center !important' }}>
                   Số điểm
                 </Box>
@@ -108,7 +113,7 @@ export const GameRanking = ({ slug }: GameRankingProps) => {
                       Số nước đi tốt nhất
                     </Box>
                   )}
-                  {!isSnakeGame && (
+                  {!isSnakeGame && !isMatch3Game && (
                     <Box component="th" sx={{ width: '25%', textAlign: 'center !important' }}>
                       Số trận thắng
                     </Box>
@@ -124,7 +129,7 @@ export const GameRanking = ({ slug }: GameRankingProps) => {
                   {entry.rank}
                 </Box>
                 <Box component="td">{entry.username}</Box>
-                {isSnakeGame ? (
+                {isSnakeGame || isMatch3Game ? (
                   <Box component="td" sx={{ textAlign: 'center' }}>
                     {entry.best_score ?? 0}
                   </Box>
@@ -135,7 +140,7 @@ export const GameRanking = ({ slug }: GameRankingProps) => {
                         {entry.best_moves}
                       </Box>
                     )}
-                    {!isSnakeGame && (
+                    {!isSnakeGame && !isMatch3Game && (
                       <Box component="td" sx={{ textAlign: 'center' }}>
                         {entry.wins}
                       </Box>

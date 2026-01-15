@@ -33,8 +33,9 @@ import { useCaroGame } from '@/hooks/use-caro-game';
 import { useTicTacToeGame } from '@/hooks/use-tic-tac-toe-game';
 import type { CaroGameState } from '@/types/game-state';
 import type { TicTacToeGameState } from '@/games/tic-tac-toe/tic-tac-toe-game';
-import type { SnakeGameState } from '@/types/game-state';
+import type { SnakeGameState, Match3GameState } from '@/types/game-state';
 import { useSnakeGame } from '@/hooks/use-snake-game';
+import { useMatch3Game } from '@/hooks/use-match-3-game';
 
 export const GameDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -60,6 +61,7 @@ export const GameDetail = () => {
   const isCaroGame = game?.slug === 'caro-4' || game?.slug === 'caro-5';
   const isTicTacToeGame = game?.slug === 'tic-tac-toe';
   const isSnakeGame = game?.slug === 'snake';
+  const isMatch3Game = game?.slug === 'match-3';
   const targetInRow = game?.slug === 'caro-5' ? 5 : 4;
   const shouldContinue = searchParams.get('continue') === '1';
 
@@ -83,6 +85,13 @@ export const GameDetail = () => {
     height: game?.default_board_height || 0,
     enabled: Boolean(isSnakeGame),
     speedMs: 180,
+  });
+
+  const match3Game = useMatch3Game({
+    width: game?.default_board_width || 0,
+    height: game?.default_board_height || 0,
+    enabled: Boolean(isMatch3Game),
+    timeLimit: game?.default_time_limit || 300,
   });
 
   // Live player score (number of player moves in current game)
@@ -145,6 +154,13 @@ export const GameDetail = () => {
     }
   }, [isSnakeGame]);
 
+  // Clear manual selection when playing Match 3 (uses its own selection)
+  useEffect(() => {
+    if (isMatch3Game) {
+      setSelectedCell(undefined);
+    }
+  }, [isMatch3Game]);
+
   // Submit score when player wins (Caro only) and clear saves for finished game
   useEffect(() => {
     if (
@@ -201,6 +217,8 @@ export const GameDetail = () => {
       setShowIconSelector(true);
     } else if (isSnakeGame) {
       snakeGame.handleReset();
+    } else if (isMatch3Game) {
+      match3Game.handleReset();
     }
     setSelectedCell(undefined);
     setShowResultDialog(false);
@@ -213,6 +231,10 @@ export const GameDetail = () => {
 
     if (isSnakeGame && snakeGame.boardCells.length > 0) {
       return snakeGame.boardCells;
+    }
+
+    if (isMatch3Game && match3Game.boardCells.length > 0) {
+      return match3Game.boardCells;
     }
 
     // Tic-Tac-Toe game uses its own board cells
@@ -257,9 +279,11 @@ export const GameDetail = () => {
     isCaroGame,
     isTicTacToeGame,
     isSnakeGame,
+    isMatch3Game,
     caroGame.boardCells,
     ticTacToeGame.boardCells,
     snakeGame.boardCells,
+    match3Game.boardCells,
     selectedCell,
   ]);
 
@@ -394,6 +418,39 @@ export const GameDetail = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shouldContinue, isSnakeGame, slug]);
 
+  // Auto-continue for Match 3
+  useEffect(() => {
+    const tryContinueMatch3 = async () => {
+      if (!shouldContinue || !isMatch3Game || !slug) return;
+
+      try {
+        const items = await listGameSaves(slug);
+        if (!items || items.length === 0) {
+          navigate(`/game/${slug}`, { replace: true });
+          return;
+        }
+
+        const latest = items[0];
+        const state = (await loadGameSave(slug, latest.id)) as Match3GameState;
+
+        if (state.gameStatus !== 'playing') {
+          navigate(`/game/${slug}`, { replace: true });
+          return;
+        }
+
+        match3Game.restoreState(state);
+        setShowResultDialog(false);
+        setScoreSubmitted(false);
+        setSelectedCell(undefined);
+      } catch {
+        navigate(`/game/${slug}`, { replace: true });
+      }
+    };
+
+    void tryContinueMatch3();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldContinue, isMatch3Game, slug]);
+
   // Show result dialog when Caro game ends
   useEffect(() => {
     if (isCaroGame && caroGame.isGameEnded && caroGame.gameState) {
@@ -413,6 +470,13 @@ export const GameDetail = () => {
       setShowResultDialog(true);
     }
   }, [isSnakeGame, snakeGame.isGameOver, snakeGame.gameState]);
+
+  // Show result dialog when Match 3 game ends
+  useEffect(() => {
+    if (isMatch3Game && match3Game.isGameEnded && match3Game.gameState) {
+      setShowResultDialog(true);
+    }
+  }, [isMatch3Game, match3Game.isGameEnded, match3Game.gameState]);
 
   // Record score for Tic-Tac-Toe when player wins (ranking by number of wins)
   useEffect(() => {
@@ -475,6 +539,27 @@ export const GameDetail = () => {
     setScoreSubmitted(true);
   }, [isSnakeGame, slug, snakeGame.gameState, scoreSubmitted]);
 
+  // Record score and clear saves when Match 3 game ends
+  useEffect(() => {
+    if (!isMatch3Game || !slug || !match3Game.gameState || scoreSubmitted) return;
+    const status = match3Game.gameState.gameStatus;
+    if (status !== 'time-up' && status !== 'no-moves' && status !== 'game-over') return;
+
+    const finalScore = match3Game.gameState.score;
+    // For Match 3, use score as the ranking metric (not movesCount)
+    if (finalScore > 0) {
+      recordGameScore(slug, { movesCount: finalScore, result: 'win' }).catch(() => {
+        // Ignore score errors in UI
+      });
+    }
+
+    clearGameSaves(slug).catch(() => {
+      // Ignore clear errors in UI
+    });
+
+    setScoreSubmitted(true);
+  }, [isMatch3Game, slug, match3Game.gameState, scoreSubmitted]);
+
   const handleBackToDashboard = () => {
     navigate('/dashboard');
   };
@@ -485,11 +570,12 @@ export const GameDetail = () => {
 
   const handleSaveGame = async () => {
     if (!slug) return;
-    // Save Caro or Tic-Tac-Toe state depending on current game
+    // Save game state depending on current game
     const caroState = isCaroGame ? caroGame.getSerializableState() : null;
     const tttState = isTicTacToeGame ? ticTacToeGame.gameState : null;
     const snakeState = isSnakeGame ? snakeGame.getSerializableState() : null;
-    const stateToSave = caroState ?? tttState ?? snakeState;
+    const match3State = isMatch3Game ? match3Game.getSerializableState() : null;
+    const stateToSave = caroState ?? tttState ?? snakeState ?? match3State;
     if (!stateToSave) return;
 
     try {
@@ -521,6 +607,8 @@ export const GameDetail = () => {
     } else if (isSnakeGame) {
       // Snake board is controlled via keyboard; ignore clicks
       return;
+    } else if (isMatch3Game) {
+      match3Game.handleTileClick(row, col);
     } else {
       setSelectedCell({ row, col });
     }
@@ -532,6 +620,11 @@ export const GameDetail = () => {
 
     if (isSnakeGame) {
       snakeGame.changeDirection('left');
+      return;
+    }
+
+    if (isMatch3Game) {
+      match3Game.handleMoveSelection('left');
       return;
     }
 
@@ -563,6 +656,11 @@ export const GameDetail = () => {
       return;
     }
 
+    if (isMatch3Game) {
+      match3Game.handleMoveSelection('right');
+      return;
+    }
+
     if (isCaroGame) {
       // For Caro game, navigate selected cell right
       if (selectedCell && game) {
@@ -588,6 +686,11 @@ export const GameDetail = () => {
 
     if (isSnakeGame) {
       snakeGame.changeDirection('up');
+      return;
+    }
+
+    if (isMatch3Game) {
+      match3Game.handleMoveSelection('up');
       return;
     }
 
@@ -619,6 +722,11 @@ export const GameDetail = () => {
       return;
     }
 
+    if (isMatch3Game) {
+      match3Game.handleMoveSelection('down');
+      return;
+    }
+
     if (isCaroGame) {
       // For Caro game, navigate selected cell down
       if (selectedCell && game) {
@@ -643,6 +751,14 @@ export const GameDetail = () => {
     if (showInstructions || showResultDialog) return;
 
     if (isSnakeGame) {
+      return;
+    }
+
+    if (isMatch3Game) {
+      // For Match 3, Enter to select/swap:
+      // - If no tile selected: select current keyboard position
+      // - If tile selected: swap with current keyboard position (if adjacent)
+      match3Game.handleSwapSelected();
       return;
     }
 
@@ -891,6 +1007,54 @@ export const GameDetail = () => {
                 )}
               </Box>
             )}
+            {isMatch3Game && match3Game.gameState && (
+              <Box sx={{ mb: 2, textAlign: 'center' }}>
+                <Typography variant="h6" gutterBottom>
+                  {match3Game.getStatusMessage()}
+                </Typography>
+                <Box sx={{ mt: 1, display: 'flex', justifyContent: 'center', gap: 1 }}>
+                  {!match3Game.isGameEnded && (
+                    <Button
+                      variant="outlined"
+                      startIcon={<SaveIcon />}
+                      size="small"
+                      onClick={handleSaveGame}
+                      disabled={saving}
+                    >
+                      {saving ? 'Đang lưu...' : 'Lưu ván'}
+                    </Button>
+                  )}
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<RefreshIcon />}
+                    onClick={() => {
+                      match3Game.handleReset();
+                      setScoreSubmitted(false);
+                      setShowResultDialog(false);
+                      setSelectedCell(undefined);
+                    }}
+                  >
+                    Reset
+                  </Button>
+                  {match3Game.isGameEnded && (
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<ArrowBackIcon />}
+                      onClick={handleBackToDashboard}
+                    >
+                      Quay lại
+                    </Button>
+                  )}
+                </Box>
+                {saveError && (
+                  <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
+                    {saveError}
+                  </Typography>
+                )}
+              </Box>
+            )}
             {game && boardCells.length > 0 && (
               <>
                 <GameBoard
@@ -899,20 +1063,26 @@ export const GameDetail = () => {
                   cells={boardCells}
                   selectedCell={selectedCell}
                   onCellClick={handleCellClick}
+                  onCellDragStart={isMatch3Game ? match3Game.handleTileDragStart : undefined}
+                  onCellDragEnd={isMatch3Game ? match3Game.handleTileDragEnd : undefined}
+                  onCellDragOver={isMatch3Game ? match3Game.handleTileDragOver : undefined}
+                  onCellDrop={isMatch3Game ? match3Game.handleTileDrop : undefined}
                   disabled={
                     isSnakeGame
                       ? true
-                      : isCaroGame
-                        ? caroGame.isGameEnded ||
-                          caroGame.isAITurn ||
-                          caroGame.gameState?.currentPlayer === 'computer'
-                        : isTicTacToeGame
-                          ? ticTacToeGame.isGameEnded ||
-                            ticTacToeGame.gameState?.currentPlayer ===
-                              (playerIcon === 'X' ? 'O' : 'X')
-                          : false
+                      : isMatch3Game
+                        ? match3Game.isGameEnded
+                        : isCaroGame
+                          ? caroGame.isGameEnded ||
+                            caroGame.isAITurn ||
+                            caroGame.gameState?.currentPlayer === 'computer'
+                          : isTicTacToeGame
+                            ? ticTacToeGame.isGameEnded ||
+                              ticTacToeGame.gameState?.currentPlayer ===
+                                (playerIcon === 'X' ? 'O' : 'X')
+                            : false
                   }
-                  cellSizeMultiplier={isSnakeGame ? 0.7 : 1}
+                  cellSizeMultiplier={isSnakeGame ? 0.7 : isMatch3Game ? 0.9 : 1}
                 />
                 <FunctionButtons
                   onLeft={handleLeft}
@@ -926,22 +1096,27 @@ export const GameDetail = () => {
                     left:
                       showInstructions ||
                       showResultDialog ||
-                      (isSnakeGame && (snakeGame.isGameOver || snakeGame.isPaused)),
+                      (isSnakeGame && (snakeGame.isGameOver || snakeGame.isPaused)) ||
+                      (isMatch3Game && match3Game.isGameEnded),
                     right:
                       showInstructions ||
                       showResultDialog ||
-                      (isSnakeGame && (snakeGame.isGameOver || snakeGame.isPaused)),
+                      (isSnakeGame && (snakeGame.isGameOver || snakeGame.isPaused)) ||
+                      (isMatch3Game && match3Game.isGameEnded),
                     up:
                       showInstructions ||
                       showResultDialog ||
-                      (isSnakeGame && (snakeGame.isGameOver || snakeGame.isPaused)),
+                      (isSnakeGame && (snakeGame.isGameOver || snakeGame.isPaused)) ||
+                      (isMatch3Game && match3Game.isGameEnded),
                     down:
                       showInstructions ||
                       showResultDialog ||
-                      (isSnakeGame && (snakeGame.isGameOver || snakeGame.isPaused)),
+                      (isSnakeGame && (snakeGame.isGameOver || snakeGame.isPaused)) ||
+                      (isMatch3Game && match3Game.isGameEnded),
                     enter:
                       showInstructions ||
                       showResultDialog ||
+                      (isMatch3Game && match3Game.isGameEnded) ||
                       (isCaroGame && (caroGame.isGameEnded || caroGame.isAITurn)) ||
                       (isTicTacToeGame &&
                         (ticTacToeGame.isGameEnded ||
@@ -1017,6 +1192,18 @@ export const GameDetail = () => {
           onNewGame={handleNewGameFromResult}
           gameName={game.name}
           score={snakeScore}
+          onBackToDashboard={handleBackToDashboard}
+        />
+      )}
+
+      {isMatch3Game && match3Game.gameState && (
+        <GameResultDialog
+          open={showResultDialog}
+          gameStatus={match3Game.gameState.gameStatus}
+          onClose={() => setShowResultDialog(false)}
+          onNewGame={handleNewGameFromResult}
+          gameName={game.name}
+          score={match3Game.gameState.score}
           onBackToDashboard={handleBackToDashboard}
         />
       )}
