@@ -431,7 +431,8 @@ export const GameDetail = () => {
         }
 
         const latest = items[0];
-        const state = (await loadGameSave(slug, latest.id)) as Match3GameState;
+        const loadedState = await loadGameSave(slug, latest.id);
+        const state = loadedState as unknown as Match3GameState;
 
         if (state.gameStatus !== 'playing') {
           navigate(`/game/${slug}`, { replace: true });
