@@ -1,18 +1,37 @@
 import { useState, useEffect } from 'react';
-import { AppBar, Toolbar, Typography, Button, Box, Badge } from '@mui/material';
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  Box,
+  Badge,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
+  Divider,
+} from '@mui/material';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PeopleIcon from '@mui/icons-material/People';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import LightModeIcon from '@mui/icons-material/LightMode';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import { useAuth } from '@/context/use-auth';
 import { useNavigate } from 'react-router-dom';
-import { ThemeToggle } from '@/components/theme-toggle';
 import { FriendModal } from '@/components/friend-modal';
 import { getFriendRequests } from '@/api/friends';
+import { useTheme } from '@/theme';
 
 export const AppHeader = () => {
   const { currentUser, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const { mode, toggleTheme } = useTheme();
   const [friendModalOpen, setFriendModalOpen] = useState(false);
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const menuOpen = Boolean(anchorEl);
 
   // Fetch pending friend requests count
   const fetchPendingRequestsCount = async () => {
@@ -58,6 +77,29 @@ export const AppHeader = () => {
     fetchPendingRequestsCount();
   };
 
+  const handleGoToProfile = () => {
+    navigate('/profile');
+    handleCloseMenu();
+  };
+
+  const handleOpenMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseMenu = () => {
+    setAnchorEl(null);
+  };
+
+  const handleToggleTheme = () => {
+    toggleTheme();
+    handleCloseMenu();
+  };
+
+  const handleMenuFriendClick = () => {
+    handleCloseMenu();
+    handleOpenFriendModal();
+  };
+
   if (!isAuthenticated) {
     return null;
   }
@@ -75,29 +117,69 @@ export const AppHeader = () => {
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           {currentUser && (
-            <Typography variant="body1" component="span">
-              Xin chào, {currentUser.username}
-            </Typography>
+            <Button
+              color="inherit"
+              onClick={handleOpenMenu}
+              endIcon={<ArrowDropDownIcon />}
+              sx={{
+                textTransform: 'none',
+                fontSize: '1rem',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                },
+              }}
+            >
+              {currentUser.username}
+            </Button>
           )}
-          <Button
-            color="inherit"
-            startIcon={
-              <Badge
-                badgeContent={pendingRequestsCount > 0 ? pendingRequestsCount : undefined}
-                color="error"
-              >
-                <PeopleIcon />
-              </Badge>
-            }
-            onClick={handleOpenFriendModal}
-            sx={{ ml: 1 }}
+          <Menu
+            anchorEl={anchorEl}
+            open={menuOpen}
+            onClose={handleCloseMenu}
+            anchorOrigin={{
+              vertical: 'bottom',
+              horizontal: 'right',
+            }}
+            transformOrigin={{
+              vertical: 'top',
+              horizontal: 'right',
+            }}
           >
-            Friends
-          </Button>
-          <ThemeToggle />
-          <Button color="inherit" startIcon={<LogoutIcon />} onClick={handleLogout} sx={{ ml: 1 }}>
-            Đăng xuất
-          </Button>
+            <MenuItem onClick={handleGoToProfile}>
+              <ListItemIcon>
+                <AccountCircleIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Profile</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={handleToggleTheme}>
+              <ListItemIcon>
+                {mode === 'dark' ? (
+                  <LightModeIcon fontSize="small" />
+                ) : (
+                  <DarkModeIcon fontSize="small" />
+                )}
+              </ListItemIcon>
+              <ListItemText>{mode === 'dark' ? 'Light Mode' : 'Dark Mode'}</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={handleMenuFriendClick}>
+              <ListItemIcon>
+                <Badge
+                  badgeContent={pendingRequestsCount > 0 ? pendingRequestsCount : undefined}
+                  color="error"
+                >
+                  <PeopleIcon fontSize="small" />
+                </Badge>
+              </ListItemIcon>
+              <ListItemText>Friends</ListItemText>
+            </MenuItem>
+            <Divider />
+            <MenuItem onClick={handleLogout}>
+              <ListItemIcon>
+                <LogoutIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Đăng xuất</ListItemText>
+            </MenuItem>
+          </Menu>
         </Box>
       </Toolbar>
       <FriendModal

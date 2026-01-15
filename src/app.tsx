@@ -4,6 +4,7 @@ import { Login } from '@/pages/login';
 import { Register } from '@/pages/register';
 import { Dashboard } from '@/pages/dashboard';
 import { GameDetail } from '@/pages/game-detail';
+import { Profile } from '@/pages/profile';
 import { ProtectedRoute } from '@/components/protected-route';
 import { AppHeader } from '@/components/app-header';
 import { AuthProvider } from '@/context/auth-context';
@@ -30,6 +31,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <GameDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
                 </ProtectedRoute>
               }
             />
