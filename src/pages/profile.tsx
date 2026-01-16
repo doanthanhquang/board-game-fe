@@ -2,7 +2,13 @@ import { useState, useEffect } from 'react';
 import { Container, Box, CircularProgress, Alert, Button } from '@mui/material';
 import { Edit as EditIcon } from '@mui/icons-material';
 import { getProfile, updateProfile, type ProfileData } from '@/api/profile';
-import { ProfileHeader, ProfileInfo, GameStatistics, ProfileEditForm } from '@/components/profile';
+import {
+  ProfileHeader,
+  ProfileInfo,
+  GameStatistics,
+  ProfileEditForm,
+  Achievements,
+} from '@/components/profile';
 
 export const Profile = () => {
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
@@ -101,6 +107,9 @@ export const Profile = () => {
           <ProfileHeader user={profileData.user} profile={profileData.profile} />
           <ProfileInfo user={profileData.user} profile={profileData.profile} />
           <GameStatistics statistics={profileData.statistics} />
+          <Box sx={{ mt: 4 }}>
+            <Achievements />
+          </Box>
         </>
       )}
     </Container>
