@@ -7,16 +7,25 @@ import {
   CircularProgress,
   Alert,
   Typography,
+  IconButton,
+  Badge,
 } from '@mui/material';
+import ChatIcon from '@mui/icons-material/Chat';
 import { getFriends, type Friendship } from '@/api/friends';
+import { getConversations, type Conversation } from '@/api/messages';
+import { ChatPanel } from '@/components/chat';
 
 export const FriendList = () => {
   const [friends, setFriends] = useState<Friendship[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [selectedFriend, setSelectedFriend] = useState<{ id: string; name: string } | null>(null);
 
   useEffect(() => {
     loadFriends();
+    loadConversations();
   }, []);
 
   const loadFriends = async () => {
@@ -31,6 +40,41 @@ export const FriendList = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadConversations = async () => {
+    try {
+      const conversationsList = await getConversations();
+      setConversations(conversationsList);
+    } catch (err) {
+      // Silently fail - not critical
+      console.error('Failed to load conversations:', err);
+    }
+  };
+
+  const getUnreadStatus = (friendId: string): boolean => {
+    const conversation = conversations.find((conv) => conv.friend?.id === friendId);
+    return (conversation?.unreadCount || 0) > 0;
+  };
+
+  const handleOpenChat = (friend: Friendship) => {
+    setSelectedFriend({
+      id: friend.friend.id,
+      name: friend.friend.username,
+    });
+    setChatOpen(true);
+  };
+
+  const handleCloseChat = () => {
+    setChatOpen(false);
+    setSelectedFriend(null);
+    // Refresh conversations to update unread status
+    loadConversations();
+  };
+
+  const handleMessageSent = () => {
+    // Refresh conversations after sending message
+    loadConversations();
   };
 
   if (loading) {
@@ -58,20 +102,62 @@ export const FriendList = () => {
   }
 
   return (
-    <List>
-      {friends.map((friendship) => (
-        <ListItem
-          key={friendship.id}
-          sx={{
-            border: '1px solid',
-            borderColor: 'divider',
-            borderRadius: 1,
-            mb: 1,
-          }}
-        >
-          <ListItemText primary={friendship.friend.username} secondary={friendship.friend.email} />
-        </ListItem>
-      ))}
-    </List>
+    <>
+      <List>
+        {friends.map((friendship) => {
+          const hasUnread = getUnreadStatus(friendship.friend.id);
+
+          return (
+            <ListItem
+              key={friendship.id}
+              sx={{
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 1,
+                mb: 1,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <ListItemText
+                primary={friendship.friend.username}
+                secondary={friendship.friend.email}
+              />
+              <Badge
+                variant="dot"
+                color="error"
+                invisible={!hasUnread}
+                sx={{
+                  '& .MuiBadge-dot': {
+                    width: 8,
+                    height: 8,
+                  },
+                }}
+              >
+                <IconButton
+                  edge="end"
+                  color="primary"
+                  onClick={() => handleOpenChat(friendship)}
+                  aria-label="open chat"
+                  size="small"
+                >
+                  <ChatIcon />
+                </IconButton>
+              </Badge>
+            </ListItem>
+          );
+        })}
+      </List>
+      {selectedFriend && (
+        <ChatPanel
+          open={chatOpen}
+          onClose={handleCloseChat}
+          friendId={selectedFriend.id}
+          friendName={selectedFriend.name}
+          onMessageSent={handleMessageSent}
+        />
+      )}
+    </>
   );
 };
