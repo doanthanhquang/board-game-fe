@@ -28,7 +28,7 @@ export const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState(false);
-  const [isEmail, setIsEmail] = useState(true);
+  const [isEmail, setIsEmail] = useState(false);
   const [successToastOpen, setSuccessToastOpen] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

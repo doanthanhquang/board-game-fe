@@ -18,10 +18,16 @@ const apiClient: AxiosInstance = axios.create({
 });
 
 /**
- * Request interceptor to add authentication token
+ * Request interceptor to add authentication token and API key
  */
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    // Add API key from environment variable
+    const apiKey = import.meta.env.VITE_API_KEY;
+    if (apiKey && config.headers) {
+      config.headers['X-API-Key'] = apiKey;
+    }
+
     // Get token from localStorage
     const token = localStorage.getItem('auth_token');
 
@@ -79,6 +85,7 @@ apiClient.interceptors.response.use(
         // window.location.href = '/login';
       }
     } else if (error.request) {
+      console.error('[API Error]', error.request);
       // Request made but no response received
       apiError.message = 'Network error. Please check your connection.';
     }

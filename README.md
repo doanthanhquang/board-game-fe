@@ -66,17 +66,37 @@ The `dark` class is automatically added to the `<html>` element when dark mode i
 
 ### Getting Started
 
+1. Create a `.env` file in the root directory:
 ```bash
-# Install dependencies
+cp .env.example .env
+```
+
+2. Configure environment variables in `.env`:
+```env
+# API Base URL
+VITE_API_BASE_URL=http://localhost:3001/api
+
+# API Key Configuration
+VITE_API_KEY=your-secret-api-key-here
+```
+
+3. Install dependencies:
+```bash
 yarn install
+```
 
-# Start development server
+4. Start development server:
+```bash
 yarn dev
+```
 
-# Build for production
+5. Build for production:
+```bash
 yarn build
+```
 
-# Preview production build
+6. Preview production build:
+```bash
 yarn preview
 ```
 
