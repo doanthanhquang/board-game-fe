@@ -23,6 +23,7 @@ import { useNavigate } from 'react-router-dom';
 import { FriendModal } from '@/components/friend-modal';
 import { getFriendRequests } from '@/api/friends';
 import { useTheme } from '@/theme';
+import { isAdmin } from '@/context/auth-context-types';
 
 export const AppHeader = () => {
   const { currentUser, logout, isAuthenticated } = useAuth();
@@ -64,7 +65,12 @@ export const AppHeader = () => {
   };
 
   const handleGoToDashboard = () => {
-    navigate('/dashboard');
+    // Navigate to appropriate dashboard based on user role
+    if (currentUser && isAdmin(currentUser)) {
+      navigate('/admin');
+    } else {
+      navigate('/dashboard');
+    }
   };
 
   const handleOpenFriendModal = () => {

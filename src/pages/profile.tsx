@@ -106,7 +106,7 @@ export const Profile = () => {
         <>
           <ProfileHeader user={profileData.user} profile={profileData.profile} />
           <ProfileInfo user={profileData.user} profile={profileData.profile} />
-          <GameStatistics statistics={profileData.statistics} />
+          {profileData.statistics && <GameStatistics statistics={profileData.statistics} />}
           <Box sx={{ mt: 4 }}>
             <Achievements />
           </Box>
