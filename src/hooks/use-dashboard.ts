@@ -24,7 +24,7 @@ export const useDashboard = () => {
         setLoading(true);
         setError(null);
         const gamesData = await getGames();
-        setGames(gamesData);
+        setGames(gamesData.items);
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to load games. Please try again.';

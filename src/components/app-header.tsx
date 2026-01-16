@@ -40,7 +40,7 @@ export const AppHeader = () => {
     try {
       const requests = await getFriendRequests();
       // Count only received requests (not sent ones)
-      const receivedRequests = requests.filter((req) => !req.isRequester);
+      const receivedRequests = requests.items.filter((req) => !req.isRequester);
       setPendingRequestsCount(receivedRequests.length);
     } catch (error) {
       // Silently fail - don't show error in header

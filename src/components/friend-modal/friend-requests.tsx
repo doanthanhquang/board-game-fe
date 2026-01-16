@@ -39,7 +39,7 @@ export const FriendRequests = ({ onRequestUpdated, onRequestCountChange }: Frien
 
     try {
       const requestsList = await getFriendRequests();
-      setRequests(requestsList);
+      setRequests(requestsList.items);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load friend requests');
     } finally {

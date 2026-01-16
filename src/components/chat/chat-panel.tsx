@@ -13,6 +13,8 @@ interface ChatPanelProps {
   onMessageSent?: () => void;
 }
 
+const MESSAGES_PER_LOAD = 15;
+
 export const ChatPanel = ({
   open,
   onClose,
@@ -22,8 +24,10 @@ export const ChatPanel = ({
 }: ChatPanelProps) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [allMessages, setAllMessages] = useState<Message[]>([]);
+  const [displayedCount, setDisplayedCount] = useState(MESSAGES_PER_LOAD);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Load messages when panel opens
@@ -41,13 +45,31 @@ export const ChatPanel = ({
 
     try {
       const conversationMessages = await getConversation(friendId);
-      setMessages(conversationMessages);
+      // Sort messages by created_at ascending (oldest first)
+      const sortedMessages = [...conversationMessages].sort(
+        (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      );
+      setAllMessages(sortedMessages);
+      setDisplayedCount(MESSAGES_PER_LOAD);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load messages');
     } finally {
       setLoading(false);
     }
   };
+
+  const handleLoadMore = () => {
+    setLoadingMore(true);
+    // Simulate loading delay for better UX
+    setTimeout(() => {
+      setDisplayedCount((prev) => Math.min(prev + MESSAGES_PER_LOAD, allMessages.length));
+      setLoadingMore(false);
+    }, 300);
+  };
+
+  // Get messages to display (last N messages)
+  const displayedMessages = allMessages.slice(-displayedCount);
+  const hasMoreMessages = displayedCount < allMessages.length;
 
   const markAsRead = async () => {
     try {
@@ -71,7 +93,8 @@ export const ChatPanel = ({
   };
 
   const handleClose = () => {
-    setMessages([]);
+    setAllMessages([]);
+    setDisplayedCount(MESSAGES_PER_LOAD);
     setError(null);
     onClose();
   };
@@ -117,7 +140,14 @@ export const ChatPanel = ({
         </Box>
 
         {/* Message List */}
-        <MessageList messages={messages} loading={loading} error={error} />
+        <MessageList
+          messages={displayedMessages}
+          loading={loading}
+          error={error}
+          hasMore={hasMoreMessages}
+          loadingMore={loadingMore}
+          onLoadMore={handleLoadMore}
+        />
 
         {/* Message Input */}
         <MessageInput onSend={handleSendMessage} disabled={loading} />

@@ -4,6 +4,7 @@
  */
 
 import { get, post, del } from '@/api';
+import type { PaginationParams, PaginatedResponse } from '@/api/types';
 import type {
   CaroGameState,
   SnakeGameState,
@@ -36,7 +37,7 @@ export interface Game {
  */
 export interface GamesListResponse {
   success: boolean;
-  data: Game[];
+  data: PaginatedResponse<Game>;
 }
 
 /**
@@ -124,10 +125,15 @@ export interface LoadGameSaveResponse {
 
 /**
  * Fetch all enabled games
- * @returns Promise resolving to array of games
+ * @param params - Optional pagination parameters
+ * @returns Promise resolving to paginated games list
  */
-export const getGames = async (): Promise<Game[]> => {
-  const response = await get<GamesListResponse>('/games');
+export const getGames = async (params?: PaginationParams): Promise<PaginatedResponse<Game>> => {
+  const queryParams: Record<string, string> = {};
+  if (params?.page) queryParams.page = params.page.toString();
+  if (params?.pageSize) queryParams.pageSize = params.pageSize.toString();
+
+  const response = await get<GamesListResponse>('/games', queryParams);
   return response.data;
 };
 

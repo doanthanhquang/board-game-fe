@@ -39,8 +39,8 @@ export const getGameRatings = async (
   pageSize = 5
 ): Promise<GameRatingsList> => {
   const response = await get<GameRatingsListResponse>(`/games/${slug}/ratings`, {
-    page,
-    pageSize,
+    page: page.toString(),
+    pageSize: pageSize.toString(),
   });
   return response.data;
 };

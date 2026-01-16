@@ -9,11 +9,15 @@ import {
   Typography,
   IconButton,
   Badge,
+  Pagination,
+  Stack,
 } from '@mui/material';
 import ChatIcon from '@mui/icons-material/Chat';
 import { getFriends, type Friendship } from '@/api/friends';
 import { getConversations, type Conversation } from '@/api/messages';
 import { ChatPanel } from '@/components/chat';
+
+const ITEMS_PER_PAGE = 5;
 
 export const FriendList = () => {
   const [friends, setFriends] = useState<Friendship[]>([]);
@@ -22,19 +26,24 @@ export const FriendList = () => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [chatOpen, setChatOpen] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState<{ id: string; name: string } | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
 
   useEffect(() => {
-    loadFriends();
+    loadFriends(currentPage);
     loadConversations();
-  }, []);
+  }, [currentPage]);
 
-  const loadFriends = async () => {
+  const loadFriends = async (page: number = 1) => {
     setLoading(true);
     setError(null);
 
     try {
-      const friendsList = await getFriends();
-      setFriends(friendsList);
+      const friendsList = await getFriends({ page, pageSize: ITEMS_PER_PAGE });
+      setFriends(friendsList.items);
+      setTotal(friendsList.total);
+      setTotalPages(Math.ceil(friendsList.total / ITEMS_PER_PAGE));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load friends');
     } finally {
@@ -42,10 +51,14 @@ export const FriendList = () => {
     }
   };
 
+  const handlePageChange = (_event: React.ChangeEvent<unknown>, page: number) => {
+    setCurrentPage(page);
+  };
+
   const loadConversations = async () => {
     try {
       const conversationsList = await getConversations();
-      setConversations(conversationsList);
+      setConversations(conversationsList.items);
     } catch (err) {
       // Silently fail - not critical
       console.error('Failed to load conversations:', err);
@@ -149,6 +162,25 @@ export const FriendList = () => {
           );
         })}
       </List>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <Stack spacing={2} alignItems="center" sx={{ mt: 2, mb: 2 }}>
+          <Pagination
+            count={totalPages}
+            page={currentPage}
+            onChange={handlePageChange}
+            color="primary"
+            size="small"
+            showFirstButton
+            showLastButton
+          />
+          <Typography variant="body2" color="text.secondary">
+            Showing {friends.length} of {total} friends
+          </Typography>
+        </Stack>
+      )}
+
       {selectedFriend && (
         <ChatPanel
           open={chatOpen}

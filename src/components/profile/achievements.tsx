@@ -1,20 +1,27 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Box, Typography, CircularProgress, Alert, Paper } from '@mui/material';
+import { Box, Typography, CircularProgress, Alert, Paper, Pagination, Stack } from '@mui/material';
 import { getAchievements, type Achievement } from '@/api/achievements';
 import { AchievementCard } from './achievement-card';
+
+const ITEMS_PER_PAGE = 15;
 
 export const Achievements = () => {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
 
-  const loadAchievements = useCallback(async () => {
+  const loadAchievements = useCallback(async (page: number = 1) => {
     setLoading(true);
     setError(null);
 
     try {
-      const achievementsList = await getAchievements();
-      setAchievements(achievementsList);
+      const achievementsList = await getAchievements({ page, pageSize: ITEMS_PER_PAGE });
+      setAchievements(achievementsList.items);
+      setTotal(achievementsList.total);
+      setTotalPages(Math.ceil(achievementsList.total / ITEMS_PER_PAGE));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load achievements');
     } finally {
@@ -23,8 +30,12 @@ export const Achievements = () => {
   }, []);
 
   useEffect(() => {
-    loadAchievements();
-  }, [loadAchievements]);
+    loadAchievements(currentPage);
+  }, [currentPage, loadAchievements]);
+
+  const handlePageChange = (_event: React.ChangeEvent<unknown>, page: number) => {
+    setCurrentPage(page);
+  };
 
   if (loading) {
     return (
@@ -52,7 +63,7 @@ export const Achievements = () => {
         Achievements
       </Typography>
 
-      {achievements.length === 0 ? (
+      {achievements.length === 0 && !loading ? (
         <Paper sx={{ p: 4, textAlign: 'center' }}>
           <Typography variant="body2" color="text.secondary">
             No achievements available yet.
@@ -86,7 +97,7 @@ export const Achievements = () => {
 
           {/* Game-Specific Achievements */}
           {gameAchievements.length > 0 && (
-            <Box>
+            <Box sx={{ mb: 3 }}>
               <Typography variant="h6" component="h3" sx={{ mb: 2, fontWeight: 500 }}>
                 Game Achievements
               </Typography>
@@ -106,6 +117,23 @@ export const Achievements = () => {
                 ))}
               </Box>
             </Box>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <Stack spacing={2} alignItems="center" sx={{ mt: 4 }}>
+              <Pagination
+                count={totalPages}
+                page={currentPage}
+                onChange={handlePageChange}
+                color="primary"
+                showFirstButton
+                showLastButton
+              />
+              <Typography variant="body2" color="text.secondary">
+                Showing {achievements.length} of {total} achievements
+              </Typography>
+            </Stack>
           )}
         </>
       )}

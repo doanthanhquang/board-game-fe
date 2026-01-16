@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Box, Typography, Paper, CircularProgress, Alert } from '@mui/material';
+import { Box, Typography, Paper, CircularProgress, Alert, Button } from '@mui/material';
 import type { Message } from '@/api/messages';
 import { useAuth } from '@/context/use-auth';
 
@@ -7,16 +7,32 @@ interface MessageListProps {
   messages: Message[];
   loading?: boolean;
   error?: string | null;
+  hasMore?: boolean;
+  loadingMore?: boolean;
+  onLoadMore?: () => void;
 }
 
-export const MessageList = ({ messages, loading, error }: MessageListProps) => {
+export const MessageList = ({
+  messages,
+  loading,
+  error,
+  hasMore = false,
+  loadingMore = false,
+  onLoadMore,
+}: MessageListProps) => {
   const { currentUser } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesTopRef = useRef<HTMLDivElement>(null);
+  const previousMessagesLength = useRef(messages.length);
 
-  // Auto-scroll to bottom when messages change
+  // Auto-scroll to bottom when new messages are added (not when loading more)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    if (messages.length > previousMessagesLength.current) {
+      // New messages added, scroll to bottom
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+    previousMessagesLength.current = messages.length;
+  }, [messages.length]);
 
   const formatTimestamp = (timestamp: string): string => {
     const date = new Date(timestamp);
@@ -84,6 +100,35 @@ export const MessageList = ({ messages, loading, error }: MessageListProps) => {
         gap: 1,
       }}
     >
+      {/* Load More Button */}
+      {hasMore && (
+        <Box
+          ref={messagesTopRef}
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            py: 1,
+          }}
+        >
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={onLoadMore}
+            disabled={loadingMore}
+            sx={{ minWidth: 120 }}
+          >
+            {loadingMore ? (
+              <>
+                <CircularProgress size={16} sx={{ mr: 1 }} />
+                Loading...
+              </>
+            ) : (
+              'Load More'
+            )}
+          </Button>
+        </Box>
+      )}
+
       {messages.map((message) => {
         const isSent = message.sender_id === currentUser?.id;
 

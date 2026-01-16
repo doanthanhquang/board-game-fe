@@ -4,6 +4,7 @@
  */
 
 import { get, post, put } from '@/api';
+import type { PaginationParams, PaginatedResponse } from '@/api/types';
 
 /**
  * Message information
@@ -66,7 +67,7 @@ export interface GetConversationResponse {
  */
 export interface GetConversationsResponse {
   success: boolean;
-  data: Conversation[];
+  data: PaginatedResponse<Conversation>;
 }
 
 /**
@@ -122,12 +123,19 @@ export const getConversation = async (userId: string): Promise<Message[]> => {
 
 /**
  * Get all conversations with unread status
- * @returns Promise resolving to array of conversations
+ * @param params - Optional pagination parameters
+ * @returns Promise resolving to paginated conversations list
  * @throws Error if fetch fails
  */
-export const getConversations = async (): Promise<Conversation[]> => {
+export const getConversations = async (
+  params?: PaginationParams
+): Promise<PaginatedResponse<Conversation>> => {
   try {
-    const response = await get<GetConversationsResponse>('/messages/conversations');
+    const queryParams: Record<string, string> = {};
+    if (params?.page) queryParams.page = params.page.toString();
+    if (params?.pageSize) queryParams.pageSize = params.pageSize.toString();
+
+    const response = await get<GetConversationsResponse>('/messages/conversations', queryParams);
     return response.data;
   } catch (error: unknown) {
     if (error && typeof error === 'object' && 'message' in error) {

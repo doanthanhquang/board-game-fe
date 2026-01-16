@@ -1,17 +1,29 @@
+/**
+ * Shared API types
+ */
+
 import type { AxiosRequestConfig } from 'axios';
 
 /**
- * Generic API response wrapper
- * @template T - The type of data returned by the API
+ * Pagination parameters
  */
-export interface ApiResponse<T> {
-  data: T;
-  message?: string;
-  status?: number;
+export interface PaginationParams {
+  page?: number;
+  pageSize?: number;
 }
 
 /**
- * API error response structure
+ * Paginated response structure
+ */
+export interface PaginatedResponse<T> {
+  items: T[];
+  page: number;
+  pageSize: number;
+  total: number;
+}
+
+/**
+ * API error structure
  */
 export interface ApiError {
   message: string;
@@ -21,11 +33,20 @@ export interface ApiError {
 }
 
 /**
- * Extended request configuration options
+ * Query parameters for API requests
+ */
+export type QueryParams = Record<string, string>;
+
+/**
+ * Request configuration (extends Axios request config)
  */
 export type RequestConfig = AxiosRequestConfig;
 
 /**
- * Query parameters type for GET requests
+ * Generic API response structure
  */
-export type QueryParams = Record<string, string | number | boolean | undefined>;
+export interface ApiResponse<T = unknown> {
+  success: boolean;
+  data: T;
+  message?: string;
+}

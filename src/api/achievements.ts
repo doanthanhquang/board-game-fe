@@ -4,6 +4,7 @@
  */
 
 import { get, post } from '@/api';
+import type { PaginationParams, PaginatedResponse } from '@/api/types';
 
 /**
  * Achievement information
@@ -45,7 +46,7 @@ export interface UserAchievement {
  */
 export interface GetAchievementsResponse {
   success: boolean;
-  data: Achievement[];
+  data: PaginatedResponse<Achievement>;
 }
 
 /**
@@ -61,7 +62,7 @@ export interface GetAchievementResponse {
  */
 export interface GetUserAchievementsResponse {
   success: boolean;
-  data: UserAchievement[];
+  data: PaginatedResponse<UserAchievement>;
 }
 
 /**
@@ -87,12 +88,19 @@ export interface CheckAchievementsResponse {
 
 /**
  * Get all achievements with user unlock status
- * @returns Promise resolving to array of achievements
+ * @param params - Optional pagination parameters
+ * @returns Promise resolving to paginated achievements list
  * @throws Error if fetch fails
  */
-export const getAchievements = async (): Promise<Achievement[]> => {
+export const getAchievements = async (
+  params?: PaginationParams
+): Promise<PaginatedResponse<Achievement>> => {
   try {
-    const response = await get<GetAchievementsResponse>('/achievements');
+    const queryParams: Record<string, string> = {};
+    if (params?.page) queryParams.page = params.page.toString();
+    if (params?.pageSize) queryParams.pageSize = params.pageSize.toString();
+
+    const response = await get<GetAchievementsResponse>('/achievements', queryParams);
     return response.data;
   } catch (error: unknown) {
     if (error && typeof error === 'object' && 'message' in error) {
@@ -122,12 +130,19 @@ export const getAchievementById = async (id: string): Promise<Achievement> => {
 
 /**
  * Get user's unlocked achievements
- * @returns Promise resolving to array of unlocked achievements
+ * @param params - Optional pagination parameters
+ * @returns Promise resolving to paginated unlocked achievements list
  * @throws Error if fetch fails
  */
-export const getUserAchievements = async (): Promise<UserAchievement[]> => {
+export const getUserAchievements = async (
+  params?: PaginationParams
+): Promise<PaginatedResponse<UserAchievement>> => {
   try {
-    const response = await get<GetUserAchievementsResponse>('/achievements/user');
+    const queryParams: Record<string, string> = {};
+    if (params?.page) queryParams.page = params.page.toString();
+    if (params?.pageSize) queryParams.pageSize = params.pageSize.toString();
+
+    const response = await get<GetUserAchievementsResponse>('/achievements/user', queryParams);
     return response.data;
   } catch (error: unknown) {
     if (error && typeof error === 'object' && 'message' in error) {

@@ -4,6 +4,7 @@
  */
 
 import { get, post, put, del } from '@/api';
+import type { PaginationParams, PaginatedResponse } from '@/api/types';
 
 /**
  * User information for friend search results
@@ -65,19 +66,19 @@ export interface FriendRequestResponse {
 }
 
 /**
- * Friend requests list response
- */
-export interface FriendRequestsResponse {
-  success: boolean;
-  data: FriendRequest[];
-}
-
-/**
  * Friends list response
  */
 export interface FriendsResponse {
   success: boolean;
-  data: Friendship[];
+  data: PaginatedResponse<Friendship>;
+}
+
+/**
+ * Paginated friend requests list response
+ */
+export interface PaginatedFriendRequestsResponse {
+  success: boolean;
+  data: PaginatedResponse<FriendRequest>;
 }
 
 /**
@@ -128,12 +129,19 @@ export const sendFriendRequest = async (addresseeId: string): Promise<FriendRequ
 
 /**
  * Get pending friend requests (sent and received)
- * @returns Promise resolving to friend requests list
+ * @param params - Optional pagination parameters
+ * @returns Promise resolving to paginated friend requests list
  * @throws Error if fetch fails
  */
-export const getFriendRequests = async (): Promise<FriendRequest[]> => {
+export const getFriendRequests = async (
+  params?: PaginationParams
+): Promise<PaginatedResponse<FriendRequest>> => {
   try {
-    const response = await get<FriendRequestsResponse>('/friends/requests');
+    const queryParams: Record<string, string> = {};
+    if (params?.page) queryParams.page = params.page.toString();
+    if (params?.pageSize) queryParams.pageSize = params.pageSize.toString();
+
+    const response = await get<PaginatedFriendRequestsResponse>('/friends/requests', queryParams);
     return response.data;
   } catch (error: unknown) {
     if (error && typeof error === 'object' && 'message' in error) {
@@ -180,12 +188,19 @@ export const rejectFriendRequest = async (requestId: string): Promise<void> => {
 
 /**
  * Get list of accepted friends
- * @returns Promise resolving to friends list
+ * @param params - Optional pagination parameters
+ * @returns Promise resolving to paginated friends list
  * @throws Error if fetch fails
  */
-export const getFriends = async (): Promise<Friendship[]> => {
+export const getFriends = async (
+  params?: PaginationParams
+): Promise<PaginatedResponse<Friendship>> => {
   try {
-    const response = await get<FriendsResponse>('/friends');
+    const queryParams: Record<string, string> = {};
+    if (params?.page) queryParams.page = params.page.toString();
+    if (params?.pageSize) queryParams.pageSize = params.pageSize.toString();
+
+    const response = await get<FriendsResponse>('/friends', queryParams);
     return response.data;
   } catch (error: unknown) {
     if (error && typeof error === 'object' && 'message' in error) {
