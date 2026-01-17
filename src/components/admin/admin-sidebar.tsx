@@ -15,6 +15,7 @@ import {
 import MenuIcon from '@mui/icons-material/Menu';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import PeopleIcon from '@mui/icons-material/People';
+import GamesIcon from '@mui/icons-material/Games';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const DRAWER_WIDTH = 240;
@@ -57,6 +58,12 @@ export const AdminSidebar = ({ open: controlledOpen, onToggle }: AdminSidebarPro
       icon: <PeopleIcon />,
       path: '/admin/users',
       active: location.pathname === '/admin/users',
+    },
+    {
+      text: 'Games',
+      icon: <GamesIcon />,
+      path: '/admin/games',
+      active: location.pathname === '/admin/games',
     },
   ];
 

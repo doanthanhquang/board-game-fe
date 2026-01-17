@@ -3,8 +3,8 @@
  * Functions for interacting with game-related endpoints
  */
 
-import { get, post, del } from '@/api';
-import type { PaginationParams, PaginatedResponse } from '@/api/types';
+import { get, post, del, put } from '@/api';
+import type { PaginationParams, PaginatedResponse, ApiResponse } from '@/api/types';
 import type {
   CaroGameState,
   SnakeGameState,
@@ -214,4 +214,55 @@ export const loadGameSave = async (
  */
 export const clearGameSaves = async (slug: string): Promise<void> => {
   await del<void>(`/games/${slug}/saves`);
+};
+
+/**
+ * Admin Game Management API
+ */
+
+/**
+ * List all games with pagination (admin only, includes disabled games)
+ * @param params - Query parameters (page, pageSize, search)
+ * @returns Paginated list of games
+ */
+export const listAllGames = async (
+  params?: PaginationParams & { search?: string }
+): Promise<PaginatedResponse<Game>> => {
+  const queryParams: Record<string, string> = {};
+  if (params?.page) queryParams.page = params.page.toString();
+  if (params?.pageSize) queryParams.pageSize = params.pageSize.toString();
+  if (params?.search) queryParams.search = params.search;
+
+  const response = await get<GamesListResponse>('/admin/games', queryParams);
+  return response.data;
+};
+
+/**
+ * Get game by ID (admin only)
+ * @param id - Game ID
+ * @returns Game data
+ */
+export const getGameById = async (id: string): Promise<Game> => {
+  const response = await get<GameResponse>(`/admin/games/${id}`);
+  return response.data;
+};
+
+/**
+ * Update game configuration (admin only)
+ * @param id - Game ID
+ * @param data - Game configuration update data
+ * @returns Updated game data
+ */
+export interface UpdateGameConfigData {
+  default_board_width?: number;
+  default_board_height?: number;
+  default_time_limit?: number | null;
+  is_enabled?: boolean;
+}
+
+export const updateGameConfig = async (
+  id: string,
+  data: UpdateGameConfigData
+): Promise<ApiResponse<Game>> => {
+  return put<ApiResponse<Game>, UpdateGameConfigData>(`/admin/games/${id}`, data);
 };
