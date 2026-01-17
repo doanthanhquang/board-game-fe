@@ -10,6 +10,7 @@ import { AdminUserManagement } from '@/pages/admin-user-management';
 import { AdminGameManagement } from '@/pages/admin-game-management';
 import { ProtectedRoute } from '@/components/protected-route';
 import { AppHeader } from '@/components/app-header';
+import { AppFooter } from '@/components/app-footer';
 import { AuthProvider } from '@/context/auth-context';
 import { useAuth } from '@/context/use-auth';
 import { isAdmin, isClient } from '@/context/auth-context-types';
@@ -57,61 +58,70 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppHeader />
-        <Box component="main">
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute requiredRole="client">
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute requiredRole="admin">
-                  <AdminDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/users"
-              element={
-                <ProtectedRoute requiredRole="admin">
-                  <AdminUserManagement />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/games"
-              element={
-                <ProtectedRoute requiredRole="admin">
-                  <AdminGameManagement />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/game/:slug"
-              element={
-                <ProtectedRoute requiredRole="client">
-                  <GameDetail />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/" element={<RootRedirect />} />
-          </Routes>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: '100vh',
+          }}
+        >
+          <AppHeader />
+          <Box component="main" sx={{ flexGrow: 1 }}>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute requiredRole="client">
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/users"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminUserManagement />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/games"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminGameManagement />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/game/:slug"
+                element={
+                  <ProtectedRoute requiredRole="client">
+                    <GameDetail />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/" element={<RootRedirect />} />
+            </Routes>
+          </Box>
+          <AppFooter />
         </Box>
       </AuthProvider>
     </BrowserRouter>
