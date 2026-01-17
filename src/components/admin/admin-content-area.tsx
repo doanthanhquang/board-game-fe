@@ -1,13 +1,23 @@
-import { Box, Container, Typography, Paper } from '@mui/material';
-import { useAuth } from '@/context/use-auth';
+import { Box, Container, Typography, Button } from '@mui/material';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import {
+  GameHotTable,
+  NewAccountsTable,
+  TopWinnersTable,
+  TopPointsTable,
+} from './statistics-tables';
+import { useState } from 'react';
 
 /**
  * AdminContentArea component
- * Main content area for admin dashboard
- * Placeholder content - actual management features will be added in separate proposals
+ * Main content area for admin dashboard with statistics tables
  */
 export const AdminContentArea = () => {
-  const { currentUser } = useAuth();
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleRefreshAll = () => {
+    setRefreshKey((prev) => prev + 1);
+  };
 
   return (
     <Box
@@ -20,38 +30,39 @@ export const AdminContentArea = () => {
           theme.palette.mode === 'light' ? theme.palette.grey[100] : theme.palette.grey[900],
       }}
     >
-      <Container maxWidth="lg">
-        <Paper
-          elevation={0}
+      <Container maxWidth="xl">
+        <Box sx={{ mb: 3 }}>
+          <Box
+            sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}
+          >
+            <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
+              Dashboard Statistics
+            </Typography>
+            <Button
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={handleRefreshAll}
+              size="small"
+            >
+              Refresh All
+            </Button>
+          </Box>
+          <Typography variant="body2" color="text.secondary">
+            Monitor platform activity, user engagement, and game popularity metrics.
+          </Typography>
+        </Box>
+
+        <Box
           sx={{
-            p: 4,
-            borderRadius: 2,
-            backgroundColor: (theme) =>
-              theme.palette.mode === 'light'
-                ? theme.palette.background.paper
-                : theme.palette.grey[800],
+            display: 'grid',
+            gap: 3,
           }}
         >
-          <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 600 }}>
-            Welcome to Admin Dashboard
-          </Typography>
-          <Typography variant="body1" color="text.secondary" paragraph>
-            Welcome, {currentUser?.username || 'Admin'}!
-          </Typography>
-          <Typography variant="body2" color="text.secondary" paragraph>
-            This is the admin management interface. Content management features will be added in
-            separate proposals.
-          </Typography>
-          <Box sx={{ mt: 4 }}>
-            <Typography variant="h6" gutterBottom>
-              Available Sections
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Use the sidebar menu to navigate between admin sections. Additional management
-              features will be available soon.
-            </Typography>
-          </Box>
-        </Paper>
+          <GameHotTable key={`game-hot-${refreshKey}`} limit={10} />
+          <NewAccountsTable key={`new-accounts-${refreshKey}`} limit={20} />
+          <TopWinnersTable key={`top-winners-${refreshKey}`} limit={20} />
+          <TopPointsTable key={`top-points-${refreshKey}`} limit={20} />
+        </Box>
       </Container>
     </Box>
   );

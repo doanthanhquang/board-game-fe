@@ -174,8 +174,13 @@ export const AdminGameManagement = () => {
               </Box>
             ) : (
               <>
-                <TableContainer>
-                  <Table>
+                <TableContainer
+                  sx={{
+                    maxHeight: 600,
+                    overflow: 'auto',
+                  }}
+                >
+                  <Table stickyHeader>
                     <TableHead>
                       <TableRow>
                         <TableCell>Name</TableCell>
