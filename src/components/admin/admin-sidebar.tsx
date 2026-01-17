@@ -14,7 +14,8 @@ import {
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import DashboardIcon from '@mui/icons-material/Dashboard';
-import { useLocation } from 'react-router-dom';
+import PeopleIcon from '@mui/icons-material/People';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const DRAWER_WIDTH = 240;
 
@@ -31,6 +32,7 @@ export const AdminSidebar = ({ open: controlledOpen, onToggle }: AdminSidebarPro
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const location = useLocation();
+  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   // Use controlled open state if provided, otherwise use internal state for mobile
@@ -43,7 +45,6 @@ export const AdminSidebar = ({ open: controlledOpen, onToggle }: AdminSidebarPro
     onToggle?.();
   };
 
-  // Placeholder menu items - can be expanded in future proposals
   const menuItems = [
     {
       text: 'Dashboard',
@@ -51,10 +52,12 @@ export const AdminSidebar = ({ open: controlledOpen, onToggle }: AdminSidebarPro
       path: '/admin',
       active: location.pathname === '/admin',
     },
-    // Future menu items can be added here:
-    // { text: 'Users', icon: <PeopleIcon />, path: '/admin/users' },
-    // { text: 'Games', icon: <GamesIcon />, path: '/admin/games' },
-    // { text: 'Settings', icon: <SettingsIcon />, path: '/admin/settings' },
+    {
+      text: 'Users',
+      icon: <PeopleIcon />,
+      path: '/admin/users',
+      active: location.pathname === '/admin/users',
+    },
   ];
 
   const drawerContent = (
@@ -69,6 +72,12 @@ export const AdminSidebar = ({ open: controlledOpen, onToggle }: AdminSidebarPro
           <ListItem key={item.text} disablePadding>
             <ListItemButton
               selected={item.active}
+              onClick={() => {
+                navigate(item.path);
+                if (isMobile) {
+                  setMobileOpen(false);
+                }
+              }}
               sx={{
                 '&.Mui-selected': {
                   backgroundColor: theme.palette.primary.main,

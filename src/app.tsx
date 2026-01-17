@@ -6,6 +6,7 @@ import { Dashboard } from '@/pages/dashboard';
 import { GameDetail } from '@/pages/game-detail';
 import { Profile } from '@/pages/profile';
 import { AdminDashboard } from '@/pages/admin-dashboard';
+import { AdminUserManagement } from '@/pages/admin-user-management';
 import { ProtectedRoute } from '@/components/protected-route';
 import { AppHeader } from '@/components/app-header';
 import { AuthProvider } from '@/context/auth-context';
@@ -73,6 +74,14 @@ function App() {
               element={
                 <ProtectedRoute requiredRole="admin">
                   <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/users"
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminUserManagement />
                 </ProtectedRoute>
               }
             />
