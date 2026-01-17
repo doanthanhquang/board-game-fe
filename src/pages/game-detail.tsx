@@ -37,6 +37,10 @@ import type { SnakeGameState, Match3GameState, MemoryGameState } from '@/types/g
 import { useSnakeGame } from '@/hooks/use-snake-game';
 import { useMatch3Game } from '@/hooks/use-match-3-game';
 import { useMemoryGame } from '@/hooks/use-memory-game';
+import { useFreeDrawGame } from '@/hooks/use-free-draw-game';
+import { ColorPicker } from '@/components/color-picker/color-picker';
+import { SavedDrawingsList } from '@/components/saved-drawings-list/saved-drawings-list';
+import CollectionsIcon from '@mui/icons-material/Collections';
 
 export const GameDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -64,6 +68,7 @@ export const GameDetail = () => {
   const isSnakeGame = game?.slug === 'snake';
   const isMatch3Game = game?.slug === 'match-3';
   const isMemoryGame = game?.slug === 'memory-game';
+  const isFreeDrawGame = game?.slug === 'free-draw' || game?.game_type === 'drawing';
   const targetInRow = game?.slug === 'caro-5' ? 5 : 4;
   const shouldContinue = searchParams.get('continue') === '1';
   const gameBoardRef = useRef<HTMLDivElement>(null);
@@ -103,6 +108,14 @@ export const GameDetail = () => {
     enabled: Boolean(isMemoryGame),
     timeLimit: game?.default_time_limit || 300,
   });
+
+  const freeDrawGame = useFreeDrawGame({
+    width: game?.default_board_width || 0,
+    height: game?.default_board_height || 0,
+    enabled: Boolean(isFreeDrawGame),
+  });
+
+  const [showSavedDrawings, setShowSavedDrawings] = useState(false);
 
   // Live player score (number of player moves in current game)
   const playerScore = useMemo(() => {
@@ -251,6 +264,10 @@ export const GameDetail = () => {
       return memoryGame.boardCells;
     }
 
+    if (isFreeDrawGame && freeDrawGame.boardCells.length > 0) {
+      return freeDrawGame.boardCells;
+    }
+
     // Tic-Tac-Toe game uses its own board cells
     if (isTicTacToeGame && ticTacToeGame.boardCells.length > 0) {
       return ticTacToeGame.boardCells.map((row, rowIndex) =>
@@ -295,11 +312,13 @@ export const GameDetail = () => {
     isSnakeGame,
     isMatch3Game,
     isMemoryGame,
+    isFreeDrawGame,
     caroGame.boardCells,
     ticTacToeGame.boardCells,
     snakeGame.boardCells,
     match3Game.boardCells,
     memoryGame.boardCells,
+    freeDrawGame.boardCells,
     selectedCell,
   ]);
 
@@ -670,7 +689,9 @@ export const GameDetail = () => {
     const snakeState = isSnakeGame ? snakeGame.getSerializableState() : null;
     const match3State = isMatch3Game ? match3Game.getSerializableState() : null;
     const memoryState = isMemoryGame ? memoryGame.getSerializableState() : null;
-    const stateToSave = caroState ?? tttState ?? snakeState ?? match3State ?? memoryState;
+    const freeDrawState = isFreeDrawGame ? freeDrawGame.getSerializableState() : null;
+    const stateToSave =
+      caroState ?? tttState ?? snakeState ?? match3State ?? memoryState ?? freeDrawState;
     if (!stateToSave) return;
 
     try {
@@ -706,6 +727,8 @@ export const GameDetail = () => {
       match3Game.handleTileClick(row, col);
     } else if (isMemoryGame) {
       memoryGame.handleCardClick(row, col);
+    } else if (isFreeDrawGame) {
+      freeDrawGame.handleCellClick(row, col);
     } else {
       setSelectedCell({ row, col });
     }
@@ -1250,6 +1273,53 @@ export const GameDetail = () => {
                 )}
               </Box>
             )}
+            {isFreeDrawGame && freeDrawGame.gameState && (
+              <Box sx={{ mb: 2 }}>
+                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                  <Box sx={{ flex: '1 1 300px' }}>
+                    <ColorPicker
+                      selectedColor={freeDrawGame.gameState.selectedColor}
+                      onColorChange={freeDrawGame.handleColorChange}
+                      label="Select Color"
+                    />
+                  </Box>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <Button
+                      variant="outlined"
+                      startIcon={<SaveIcon />}
+                      size="small"
+                      onClick={handleSaveGame}
+                      disabled={saving}
+                    >
+                      {saving ? 'Saving...' : 'Save Drawing'}
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      startIcon={<CollectionsIcon />}
+                      size="small"
+                      onClick={() => setShowSavedDrawings(true)}
+                    >
+                      My Drawings
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      startIcon={<RefreshIcon />}
+                      size="small"
+                      onClick={() => {
+                        freeDrawGame.handleClearBoard();
+                      }}
+                    >
+                      Clear Board
+                    </Button>
+                  </Box>
+                </Box>
+                {saveError && (
+                  <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
+                    {saveError}
+                  </Typography>
+                )}
+              </Box>
+            )}
             {game && boardCells.length > 0 && (
               <>
                 <Box ref={gameBoardRef}>
@@ -1270,15 +1340,17 @@ export const GameDetail = () => {
                           ? match3Game.isGameEnded
                           : isMemoryGame
                             ? memoryGame.isGameEnded
-                            : isCaroGame
-                              ? caroGame.isGameEnded ||
-                                caroGame.isAITurn ||
-                                caroGame.gameState?.currentPlayer === 'computer'
-                              : isTicTacToeGame
-                                ? ticTacToeGame.isGameEnded ||
-                                  ticTacToeGame.gameState?.currentPlayer ===
-                                    (playerIcon === 'X' ? 'O' : 'X')
-                                : false
+                            : isFreeDrawGame
+                              ? false // Free-draw is always enabled
+                              : isCaroGame
+                                ? caroGame.isGameEnded ||
+                                  caroGame.isAITurn ||
+                                  caroGame.gameState?.currentPlayer === 'computer'
+                                : isTicTacToeGame
+                                  ? ticTacToeGame.isGameEnded ||
+                                    ticTacToeGame.gameState?.currentPlayer ===
+                                      (playerIcon === 'X' ? 'O' : 'X')
+                                  : false
                     }
                     cellSizeMultiplier={
                       isSnakeGame ? 0.7 : isMatch3Game ? 0.9 : isMemoryGame ? 1 : 1
@@ -1444,6 +1516,19 @@ export const GameDetail = () => {
             {saveToastMessage}
           </Alert>
         </Snackbar>
+      )}
+
+      {/* Saved Drawings List Dialog for Free-Draw */}
+      {isFreeDrawGame && slug && (
+        <SavedDrawingsList
+          open={showSavedDrawings}
+          onClose={() => setShowSavedDrawings(false)}
+          gameSlug={slug}
+          onLoad={(state) => {
+            freeDrawGame.restoreState(state);
+            setShowSavedDrawings(false);
+          }}
+        />
       )}
     </Container>
   );

@@ -10,6 +10,7 @@ import type {
   SnakeGameState,
   Match3GameState,
   MemoryGameState,
+  FreeDrawGameState,
 } from '@/types/game-state';
 import type { TicTacToeGameState } from '@/games/tic-tac-toe/tic-tac-toe-game';
 
@@ -100,7 +101,8 @@ export interface SaveGameStateRequest {
     | TicTacToeGameState
     | SnakeGameState
     | Match3GameState
-    | MemoryGameState;
+    | MemoryGameState
+    | FreeDrawGameState;
   saveName?: string;
 }
 
@@ -119,7 +121,13 @@ export interface LoadGameSaveResponse {
     save_name: string;
     created_at: string;
     updated_at: string;
-    game_state: CaroGameState | TicTacToeGameState | SnakeGameState;
+    game_state:
+      | CaroGameState
+      | TicTacToeGameState
+      | SnakeGameState
+      | Match3GameState
+      | MemoryGameState
+      | FreeDrawGameState;
   };
 }
 
@@ -203,7 +211,12 @@ export const loadGameSave = async (
   slug: string,
   saveId: string
 ): Promise<
-  CaroGameState | TicTacToeGameState | SnakeGameState | Match3GameState | MemoryGameState
+  | CaroGameState
+  | TicTacToeGameState
+  | SnakeGameState
+  | Match3GameState
+  | MemoryGameState
+  | FreeDrawGameState
 > => {
   const response = await get<LoadGameSaveResponse>(`/games/${slug}/saves/${saveId}`);
   return response.data.game_state;

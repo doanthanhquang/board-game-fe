@@ -69,3 +69,13 @@ export interface MemoryGameState {
   boardWidth: number;
   boardHeight: number;
 }
+
+export type FreeDrawGameStatus = 'drawing' | 'saved';
+
+export interface FreeDrawGameState {
+  board: (string | null)[][]; // hex color strings or null for empty
+  selectedColor: string; // current selected color (hex)
+  boardWidth: number;
+  boardHeight: number;
+  gameStatus: FreeDrawGameStatus;
+}
