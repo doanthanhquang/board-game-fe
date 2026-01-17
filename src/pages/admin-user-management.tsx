@@ -201,17 +201,17 @@ export const AdminUserManagement = () => {
               sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}
             >
               <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
-                User Management
+                Quản lý người dùng
               </Typography>
               <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenCreateForm}>
-                Create User
+                Tạo người dùng
               </Button>
             </Box>
 
             {/* Filters */}
             <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
               <TextField
-                placeholder="Search by username or email..."
+                placeholder="Tìm kiếm theo tên hoặc email"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 InputProps={{
@@ -220,13 +220,13 @@ export const AdminUserManagement = () => {
                 sx={{ flexGrow: 1, minWidth: 250 }}
               />
               <FormControl sx={{ minWidth: 150 }}>
-                <InputLabel>Role</InputLabel>
+                <InputLabel>Vai trò</InputLabel>
                 <Select
                   value={roleFilter}
-                  label="Role"
+                  label="Vai trò"
                   onChange={(e) => setRoleFilter(e.target.value as 'client' | 'admin' | 'all')}
                 >
-                  <MenuItem value="all">All Roles</MenuItem>
+                  <MenuItem value="all">Tất cả vai trò</MenuItem>
                   <MenuItem value="client">Client</MenuItem>
                   <MenuItem value="admin">Admin</MenuItem>
                 </Select>
@@ -256,17 +256,17 @@ export const AdminUserManagement = () => {
                   <Table stickyHeader>
                     <TableHead>
                       <TableRow>
-                        <TableCell>Username</TableCell>
+                        <TableCell>Tên người dùng</TableCell>
                         <TableCell>Email</TableCell>
-                        <TableCell>Role</TableCell>
-                        <TableCell align="right">Actions</TableCell>
+                        <TableCell>Vai trò</TableCell>
+                        <TableCell align="right"></TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
                       {users.length === 0 ? (
                         <TableRow>
                           <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
-                            <Typography color="text.secondary">No users found</Typography>
+                            <Typography color="text.secondary">Không có người dùng nào</Typography>
                           </TableCell>
                         </TableRow>
                       ) : (

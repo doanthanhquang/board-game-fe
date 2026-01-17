@@ -76,7 +76,7 @@ export const FriendModal = ({ open, onClose, onRequestCountChange }: FriendModal
           }}
         >
           <Typography variant="h6" component="div">
-            Friends
+            Bạn bè
           </Typography>
           <IconButton edge="end" color="inherit" onClick={onClose} aria-label="close" size="small">
             <CloseIcon />
@@ -86,9 +86,9 @@ export const FriendModal = ({ open, onClose, onRequestCountChange }: FriendModal
         {/* Tabs */}
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
           <Tabs value={activeTab} onChange={handleTabChange} aria-label="friend tabs">
-            <Tab label="Search" id="friend-tab-0" aria-controls="friend-tabpanel-0" />
-            <Tab label="Friends" id="friend-tab-1" aria-controls="friend-tabpanel-1" />
-            <Tab label="Requests" id="friend-tab-2" aria-controls="friend-tabpanel-2" />
+            <Tab label="Tìm kiếm" id="friend-tab-0" aria-controls="friend-tabpanel-0" />
+            <Tab label="Bạn bè" id="friend-tab-1" aria-controls="friend-tabpanel-1" />
+            <Tab label="Yêu cầu" id="friend-tab-2" aria-controls="friend-tabpanel-2" />
           </Tabs>
         </Box>
 

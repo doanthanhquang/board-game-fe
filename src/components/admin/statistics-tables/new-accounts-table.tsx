@@ -60,7 +60,7 @@ export const NewAccountsTable = ({ limit = 20 }: NewAccountsTableProps) => {
     <Paper sx={{ p: 2 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="h6" component="h3" sx={{ fontWeight: 600 }}>
-          New Accounts
+          Tài khoản đăng ký mới
         </Typography>
         <IconButton size="small" onClick={fetchData} disabled={loading} aria-label="Refresh">
           <RefreshIcon />
@@ -77,7 +77,7 @@ export const NewAccountsTable = ({ limit = 20 }: NewAccountsTableProps) => {
         </Alert>
       ) : data.length === 0 ? (
         <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-          No new accounts available
+          Không có số liệu thống kê trò chơi có sẵn
         </Typography>
       ) : (
         <TableContainer
@@ -89,9 +89,9 @@ export const NewAccountsTable = ({ limit = 20 }: NewAccountsTableProps) => {
           <Table size="small" stickyHeader>
             <TableHead>
               <TableRow>
-                <TableCell>Username</TableCell>
+                <TableCell>Tên người dùng</TableCell>
                 <TableCell>Email</TableCell>
-                <TableCell align="right">Registered</TableCell>
+                <TableCell align="right">Đăng ký</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>

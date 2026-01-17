@@ -51,7 +51,7 @@ export const MessageInput = ({ onSend, disabled = false }: MessageInputProps) =>
         fullWidth
         multiline
         maxRows={4}
-        placeholder="Type a message..."
+        placeholder="Nhập tin nhắn..."
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         onKeyPress={handleKeyPress}

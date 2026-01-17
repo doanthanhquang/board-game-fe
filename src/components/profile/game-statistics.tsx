@@ -24,12 +24,12 @@ export const GameStatistics = ({ statistics }: GameStatisticsProps) => {
     <Box>
       <Paper sx={{ p: 3, mb: 3 }}>
         <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
-          Overall Statistics
+          Thống kê chung
         </Typography>
         <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
           <Box>
             <Typography variant="body2" color="text.secondary">
-              Total Games Played
+              Tổng số trò chơi đã chơi
             </Typography>
             <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
               {total_games_played}
@@ -37,7 +37,7 @@ export const GameStatistics = ({ statistics }: GameStatisticsProps) => {
           </Box>
           <Box>
             <Typography variant="body2" color="text.secondary">
-              Total Wins
+              Tổng số lần thắng
             </Typography>
             <Typography variant="h5" sx={{ fontWeight: 'bold', color: 'success.main' }}>
               {total_wins}
@@ -45,7 +45,7 @@ export const GameStatistics = ({ statistics }: GameStatisticsProps) => {
           </Box>
           <Box>
             <Typography variant="body2" color="text.secondary">
-              Win Rate
+              Tỷ lệ thắng
             </Typography>
             <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
               {win_rate.toFixed(1)}%
@@ -56,11 +56,11 @@ export const GameStatistics = ({ statistics }: GameStatisticsProps) => {
 
       <Paper sx={{ p: 3 }}>
         <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
-          Best Results by Game
+          Kết quả tốt nhất theo trò chơi
         </Typography>
         {games.length === 0 ? (
           <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-            No games available
+            Không có trò chơi nào
           </Typography>
         ) : (
           <TableContainer>
@@ -68,10 +68,10 @@ export const GameStatistics = ({ statistics }: GameStatisticsProps) => {
               <TableHead>
                 <TableRow>
                   <TableCell>Game</TableCell>
-                  <TableCell align="center">Best Moves</TableCell>
-                  <TableCell align="center">Best Score</TableCell>
-                  <TableCell align="center">Wins</TableCell>
-                  <TableCell align="center">Status</TableCell>
+                  <TableCell align="center">Nước đi tốt nhất</TableCell>
+                  <TableCell align="center">Điểm cao nhất</TableCell>
+                  <TableCell align="center">Số lần thắng</TableCell>
+                  <TableCell align="center">Trạng thái</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -109,13 +109,13 @@ export const GameStatistics = ({ statistics }: GameStatisticsProps) => {
                       {game.has_played ? (
                         <Chip
                           icon={<TrophyIcon />}
-                          label="Played"
+                          label="Đã chơi"
                           color="success"
                           size="small"
                           variant="outlined"
                         />
                       ) : (
-                        <Chip label="Not Played" color="default" size="small" variant="outlined" />
+                        <Chip label="Chưa chơi" color="default" size="small" variant="outlined" />
                       )}
                     </TableCell>
                   </TableRow>

@@ -51,7 +51,7 @@ export const TopPointsTable = ({ limit = 20 }: TopPointsTableProps) => {
     <Paper sx={{ p: 2 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="h6" component="h3" sx={{ fontWeight: 600 }}>
-          Top Points
+          Điểm cao nhất
         </Typography>
         <IconButton size="small" onClick={fetchData} disabled={loading} aria-label="Refresh">
           <RefreshIcon />
@@ -68,7 +68,7 @@ export const TopPointsTable = ({ limit = 20 }: TopPointsTableProps) => {
         </Alert>
       ) : data.length === 0 ? (
         <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-          No points data available
+          Không có số liệu thống kê trò chơi có sẵn
         </Typography>
       ) : (
         <TableContainer
@@ -80,9 +80,9 @@ export const TopPointsTable = ({ limit = 20 }: TopPointsTableProps) => {
           <Table size="small" stickyHeader>
             <TableHead>
               <TableRow>
-                <TableCell>Rank</TableCell>
-                <TableCell>Username</TableCell>
-                <TableCell align="right">Points</TableCell>
+                <TableCell>Xếp hạng</TableCell>
+                <TableCell>Tên người dùng</TableCell>
+                <TableCell align="right">Điểm</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>

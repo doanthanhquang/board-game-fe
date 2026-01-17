@@ -155,7 +155,7 @@ export const AppHeader = () => {
               <ListItemIcon>
                 <AccountCircleIcon fontSize="small" />
               </ListItemIcon>
-              <ListItemText>Profile</ListItemText>
+              <ListItemText>Trang cá nhân</ListItemText>
             </MenuItem>
             <MenuItem onClick={handleToggleTheme}>
               <ListItemIcon>
@@ -165,7 +165,7 @@ export const AppHeader = () => {
                   <DarkModeIcon fontSize="small" />
                 )}
               </ListItemIcon>
-              <ListItemText>{mode === 'dark' ? 'Light Mode' : 'Dark Mode'}</ListItemText>
+              <ListItemText>{mode === 'dark' ? 'Chế độ sáng' : 'Chế độ tối'}</ListItemText>
             </MenuItem>
             <MenuItem onClick={handleMenuFriendClick}>
               <ListItemIcon>
@@ -176,7 +176,7 @@ export const AppHeader = () => {
                   <PeopleIcon fontSize="small" />
                 </Badge>
               </ListItemIcon>
-              <ListItemText>Friends</ListItemText>
+              <ListItemText>Bạn bè</ListItemText>
             </MenuItem>
             <Divider />
             <MenuItem onClick={handleLogout}>

@@ -82,11 +82,11 @@ export const FriendSearch = ({ onRequestSent }: FriendSearchProps) => {
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <TextField
         fullWidth
-        label="Search by name or email"
+        label="Tìm kiếm theo tên hoặc email"
         variant="outlined"
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        placeholder="Enter username or email..."
+        placeholder="Nhập tên hoặc email"
         InputProps={{
           endAdornment: loading ? <CircularProgress size={20} /> : null,
         }}
@@ -148,13 +148,13 @@ export const FriendSearch = ({ onRequestSent }: FriendSearchProps) => {
 
       {searchQuery.trim().length >= 2 && !loading && searchResults.length === 0 && !error && (
         <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
-          No users found matching "{searchQuery}"
+          Không tìm thấy người dùng nào phù hợp với "{searchQuery}"
         </Typography>
       )}
 
       {searchQuery.trim().length < 2 && (
         <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
-          Enter at least 2 characters to search
+          Nhập ít nhất 2 ký tự để tìm kiếm
         </Typography>
       )}
     </Box>

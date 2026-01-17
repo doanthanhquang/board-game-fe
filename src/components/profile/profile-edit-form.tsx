@@ -67,7 +67,7 @@ export const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormPr
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
-        Edit Profile
+        Sửa trang cá nhân
       </Typography>
 
       {error && (
@@ -79,31 +79,31 @@ export const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormPr
       <form onSubmit={handleSubmit}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <TextField
-            label="Display Name"
+            label="Tên hiển thị"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             fullWidth
-            helperText={`${displayName.length}/100 characters`}
+            helperText={`${displayName.length}/100 ký tự`}
             inputProps={{ maxLength: 100 }}
           />
 
           <TextField
-            label="Bio"
+            label="Giới thiệu"
             value={bio}
             onChange={(e) => setBio(e.target.value)}
             fullWidth
             multiline
             rows={4}
-            helperText={`${bio.length}/500 characters`}
+            helperText={`${bio.length}/500 ký tự`}
             inputProps={{ maxLength: 500 }}
           />
 
           <TextField
-            label="Avatar URL"
+            label="URL ảnh đại diện"
             value={avatarUrl}
             onChange={(e) => setAvatarUrl(e.target.value)}
             fullWidth
-            helperText="Enter a URL to an image (HTTP or HTTPS)"
+            helperText="Nhập URL của ảnh (HTTP hoặc HTTPS)"
             placeholder="https://example.com/avatar.jpg"
           />
 
@@ -114,7 +114,7 @@ export const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormPr
               onClick={onCancel}
               disabled={loading}
             >
-              Cancel
+              Hủy
             </Button>
             <Button
               type="submit"
@@ -122,7 +122,7 @@ export const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormPr
               startIcon={loading ? <CircularProgress size={16} /> : <SaveIcon />}
               disabled={loading}
             >
-              Save Changes
+              Lưu thay đổi
             </Button>
           </Box>
         </Box>

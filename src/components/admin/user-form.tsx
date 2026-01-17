@@ -88,19 +88,19 @@ export const UserForm = ({
     const errors: Record<string, string> = {};
 
     if (!formData.email.trim()) {
-      errors.email = 'Email is required';
+      errors.email = 'Email là bắt buộc';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = 'Invalid email format';
+      errors.email = 'Email không hợp lệ';
     }
 
     if (!formData.username.trim()) {
-      errors.username = 'Username is required';
+      errors.username = 'Tên đăng nhập là bắt buộc';
     }
 
     if (!isEditMode && !formData.password) {
-      errors.password = 'Password is required';
+      errors.password = 'Mật khẩu là bắt buộc';
     } else if (!isEditMode && formData.password.length < 8) {
-      errors.password = 'Password must be at least 8 characters';
+      errors.password = 'Mật khẩu phải có ít nhất 8 ký tự';
     }
 
     setValidationErrors(errors);
@@ -151,7 +151,7 @@ export const UserForm = ({
         }}
       >
         <Typography variant="h6" component="div" fontWeight="bold">
-          {isEditMode ? 'Edit User' : 'Create User'}
+          {isEditMode ? 'Sửa người dùng' : 'Tạo người dùng'}
         </Typography>
         <IconButton aria-label="Close" onClick={onClose} size="small" disabled={loading}>
           <CloseIcon />
@@ -176,7 +176,7 @@ export const UserForm = ({
             disabled={loading}
           />
           <TextField
-            label="Username"
+            label="Tên đăng nhập"
             value={formData.username}
             onChange={handleChange('username')}
             fullWidth
@@ -187,22 +187,22 @@ export const UserForm = ({
           />
           {!isEditMode && (
             <TextField
-              label="Password"
+              label="Mật khẩu"
               type="password"
               value={formData.password}
               onChange={handleChange('password')}
               fullWidth
               required
               error={!!validationErrors.password}
-              helperText={validationErrors.password || 'Minimum 8 characters'}
+              helperText={validationErrors.password || 'Ít nhất 8 ký tự'}
               disabled={loading}
             />
           )}
           <FormControl fullWidth>
-            <InputLabel>Role</InputLabel>
+            <InputLabel>Vai trò</InputLabel>
             <Select
               value={formData.role}
-              label="Role"
+              label="Vai trò"
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, role: e.target.value as 'client' | 'admin' }))
               }
@@ -216,10 +216,10 @@ export const UserForm = ({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={loading}>
-          Cancel
+          Hủy
         </Button>
         <Button onClick={handleSubmit} variant="contained" disabled={loading}>
-          {isEditMode ? 'Update' : 'Create'}
+          {isEditMode ? 'Cập nhật' : 'Tạo'}
         </Button>
       </DialogActions>
     </Dialog>

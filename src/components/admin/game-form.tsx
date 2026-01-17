@@ -65,19 +65,19 @@ export const GameForm = ({
 
     const width = Number(formData.default_board_width);
     if (Number.isNaN(width) || width < 3 || width > 50 || !Number.isInteger(width)) {
-      errors.default_board_width = 'Board width must be an integer between 3 and 50';
+      errors.default_board_width = 'Chiều rộng bảng phải là số nguyên từ 3 đến 50';
     }
 
     const height = Number(formData.default_board_height);
     if (Number.isNaN(height) || height < 3 || height > 50 || !Number.isInteger(height)) {
-      errors.default_board_height = 'Board height must be an integer between 3 and 50';
+      errors.default_board_height = 'Chiều cao của bảng phải là số nguyên từ 3 đến 50';
     }
 
     if (formData.default_time_limit !== null) {
       const timeLimit = Number(formData.default_time_limit);
       if (Number.isNaN(timeLimit) || timeLimit <= 0 || !Number.isInteger(timeLimit)) {
         errors.default_time_limit =
-          'Time limit must be a positive integer (seconds) or empty for no limit';
+          'Giới hạn thời gian phải là số nguyên dương (giây) hoặc trống nếu không có giới hạn';
       }
     }
 
@@ -150,7 +150,7 @@ export const GameForm = ({
         }}
       >
         <Typography variant="h6" component="div" fontWeight="bold">
-          Edit Game: {game.name}
+          Sửa trò chơi: {game.name}
         </Typography>
         <IconButton aria-label="Close" onClick={onClose} size="small" disabled={loading}>
           <CloseIcon />
@@ -167,7 +167,7 @@ export const GameForm = ({
             Slug: {game.slug}
           </Typography>
           <TextField
-            label="Board Width"
+            label="Chiều rộng bảng"
             type="number"
             value={formData.default_board_width}
             onChange={handleChange('default_board_width')}
@@ -175,11 +175,11 @@ export const GameForm = ({
             required
             inputProps={{ min: 3, max: 50, step: 1 }}
             error={!!validationErrors.default_board_width}
-            helperText={validationErrors.default_board_width || 'Between 3 and 50'}
+            helperText={validationErrors.default_board_width || 'Từ 3 đến 50'}
             disabled={loading}
           />
           <TextField
-            label="Board Height"
+            label="Chiều cao bảng"
             type="number"
             value={formData.default_board_height}
             onChange={handleChange('default_board_height')}
@@ -187,20 +187,20 @@ export const GameForm = ({
             required
             inputProps={{ min: 3, max: 50, step: 1 }}
             error={!!validationErrors.default_board_height}
-            helperText={validationErrors.default_board_height || 'Between 3 and 50'}
+            helperText={validationErrors.default_board_height || 'Từ 3 đến 50'}
             disabled={loading}
           />
           <TextField
-            label="Time Limit (seconds)"
+            label="Giới hạn thời gian (giây)"
             type="number"
             value={formData.default_time_limit === null ? '' : formData.default_time_limit}
             onChange={handleTimeLimitChange}
             fullWidth
             inputProps={{ min: 1, step: 1 }}
             error={!!validationErrors.default_time_limit}
-            helperText={validationErrors.default_time_limit || 'Leave empty for no time limit'}
+            helperText={validationErrors.default_time_limit || 'Trống nếu không có giới hạn'}
             disabled={loading}
-            placeholder="No limit"
+            placeholder="Trống nếu không có giới hạn"
           />
           <FormControlLabel
             control={
@@ -210,16 +210,16 @@ export const GameForm = ({
                 disabled={loading}
               />
             }
-            label="Enabled"
+            label="Trạng thái"
           />
         </Box>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={loading}>
-          Cancel
+          Hủy
         </Button>
         <Button onClick={handleSubmit} variant="contained" disabled={loading}>
-          Update
+          Cập nhật
         </Button>
       </DialogActions>
     </Dialog>

@@ -48,19 +48,19 @@ export const AdminSidebar = ({ open: controlledOpen, onToggle }: AdminSidebarPro
 
   const menuItems = [
     {
-      text: 'Dashboard',
+      text: 'Bảng điều khiển',
       icon: <DashboardIcon />,
       path: '/admin',
       active: location.pathname === '/admin',
     },
     {
-      text: 'Users',
+      text: 'Quản lý người dùng',
       icon: <PeopleIcon />,
       path: '/admin/users',
       active: location.pathname === '/admin/users',
     },
     {
-      text: 'Games',
+      text: 'Quản lý trò chơi',
       icon: <GamesIcon />,
       path: '/admin/games',
       active: location.pathname === '/admin/games',
@@ -71,7 +71,7 @@ export const AdminSidebar = ({ open: controlledOpen, onToggle }: AdminSidebarPro
     <Box sx={{ width: DRAWER_WIDTH, pt: 2 }}>
       <Box sx={{ px: 2, pb: 2 }}>
         <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
-          Admin Panel
+          Trang Admin
         </Typography>
       </Box>
       <List>

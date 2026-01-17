@@ -50,7 +50,7 @@ export const UserDeleteDialog = ({
         }}
       >
         <Typography variant="h6" component="div" fontWeight="bold">
-          Delete User
+          Xóa người dùng
         </Typography>
         <IconButton aria-label="Close" onClick={onClose} size="small" disabled={loading}>
           <CloseIcon />
@@ -63,28 +63,28 @@ export const UserDeleteDialog = ({
           </Alert>
         )}
         <Typography variant="body1" paragraph>
-          Are you sure you want to delete this user?
+          Bạn chắc chắn muốn xóa người dùng này?
         </Typography>
         {user && (
           <Typography variant="body2" color="text.secondary" paragraph>
-            <strong>Username:</strong> {user.username}
+            <strong>Tên đăng nhập:</strong> {user.username}
             <br />
             <strong>Email:</strong> {user.email}
             <br />
-            <strong>Role:</strong> {user.role}
+            <strong>Vai trò:</strong> {user.role}
           </Typography>
         )}
         <Alert severity="warning" sx={{ mt: 2 }}>
-          This action will soft delete the user. The user will be hidden from the system but data
-          will be preserved.
+          Hành động này sẽ xóa mềm người dùng. Người dùng sẽ bị ẩn khỏi hệ thống nhưng dữ liệu sẽ
+          được bảo tồn.
         </Alert>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={loading}>
-          Cancel
+          Hủy
         </Button>
         <Button onClick={handleConfirm} variant="contained" color="error" disabled={loading}>
-          Delete
+          Xóa
         </Button>
       </DialogActions>
     </Dialog>

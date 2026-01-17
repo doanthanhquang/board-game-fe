@@ -51,7 +51,7 @@ export const TopWinnersTable = ({ limit = 20 }: TopWinnersTableProps) => {
     <Paper sx={{ p: 2 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="h6" component="h3" sx={{ fontWeight: 600 }}>
-          Top Winners
+          Người dùng có nhiều chiến thắng nhất
         </Typography>
         <IconButton size="small" onClick={fetchData} disabled={loading} aria-label="Refresh">
           <RefreshIcon />
@@ -68,7 +68,7 @@ export const TopWinnersTable = ({ limit = 20 }: TopWinnersTableProps) => {
         </Alert>
       ) : data.length === 0 ? (
         <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-          No winners data available
+          Không có số liệu thống kê trò chơi có sẵn
         </Typography>
       ) : (
         <TableContainer
@@ -80,9 +80,9 @@ export const TopWinnersTable = ({ limit = 20 }: TopWinnersTableProps) => {
           <Table size="small" stickyHeader>
             <TableHead>
               <TableRow>
-                <TableCell>Rank</TableCell>
-                <TableCell>Username</TableCell>
-                <TableCell align="right">Wins</TableCell>
+                <TableCell>Xếp hạng</TableCell>
+                <TableCell>Tên người dùng</TableCell>
+                <TableCell align="right">Chiến thắng</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>

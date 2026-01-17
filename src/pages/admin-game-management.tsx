@@ -143,14 +143,14 @@ export const AdminGameManagement = () => {
               sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}
             >
               <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
-                Game Management
+                Quản lý trò chơi
               </Typography>
             </Box>
 
             {/* Search */}
             <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
               <TextField
-                placeholder="Search by name or slug..."
+                placeholder="Tìm kiếm theo tên hoặc slug..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 InputProps={{
@@ -183,19 +183,19 @@ export const AdminGameManagement = () => {
                   <Table stickyHeader>
                     <TableHead>
                       <TableRow>
-                        <TableCell>Name</TableCell>
+                        <TableCell>Tên</TableCell>
                         <TableCell>Slug</TableCell>
-                        <TableCell>Status</TableCell>
-                        <TableCell>Board Size</TableCell>
-                        <TableCell>Time Limit</TableCell>
-                        <TableCell align="right">Actions</TableCell>
+                        <TableCell>Trạng thái</TableCell>
+                        <TableCell>Kích thước bảng</TableCell>
+                        <TableCell>Giới hạn thời gian</TableCell>
+                        <TableCell align="right"></TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
                       {games.length === 0 ? (
                         <TableRow>
                           <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
-                            <Typography color="text.secondary">No games found</Typography>
+                            <Typography color="text.secondary">Không có trò chơi nào</Typography>
                           </TableCell>
                         </TableRow>
                       ) : (
@@ -209,7 +209,7 @@ export const AdminGameManagement = () => {
                             </TableCell>
                             <TableCell>
                               <Chip
-                                label={game.is_enabled ? 'Enabled' : 'Disabled'}
+                                label={game.is_enabled ? 'Kích hoạt' : 'Vô hiệu hóa'}
                                 size="small"
                                 color={game.is_enabled ? 'success' : 'default'}
                               />
@@ -219,7 +219,7 @@ export const AdminGameManagement = () => {
                             </TableCell>
                             <TableCell>{formatTimeLimit(game.default_time_limit)}</TableCell>
                             <TableCell align="right">
-                              <Tooltip title="Edit Game">
+                              <Tooltip title="Sửa trò chơi">
                                 <IconButton
                                   size="small"
                                   onClick={() => handleOpenEditForm(game)}

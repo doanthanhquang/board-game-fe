@@ -28,7 +28,7 @@ export const ProfileInfo = ({ user, profile }: ProfileInfoProps) => {
   return (
     <Paper sx={{ p: 3, mb: 3 }}>
       <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
-        Information
+        Thông tin
       </Typography>
 
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -44,7 +44,7 @@ export const ProfileInfo = ({ user, profile }: ProfileInfoProps) => {
             <Divider />
             <Box>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                <strong>Bio:</strong>
+                <strong>Giới thiệu:</strong>
               </Typography>
               <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
                 {profile.bio}
@@ -58,7 +58,7 @@ export const ProfileInfo = ({ user, profile }: ProfileInfoProps) => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <CalendarIcon color="action" />
           <Typography variant="body2" color="text.secondary">
-            <strong>Member since:</strong> {formatDate(user.created_at)}
+            <strong>Thành viên từ:</strong> {formatDate(user.created_at)}
           </Typography>
         </Box>
 
@@ -66,7 +66,7 @@ export const ProfileInfo = ({ user, profile }: ProfileInfoProps) => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <AccessTimeIcon color="action" />
             <Typography variant="body2" color="text.secondary">
-              <strong>Last login:</strong> {formatDate(user.last_login_at)}
+              <strong>Đăng nhập gần nhất:</strong> {formatDate(user.last_login_at)}
             </Typography>
           </Box>
         )}

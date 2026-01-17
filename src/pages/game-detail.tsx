@@ -1291,7 +1291,7 @@ export const GameDetail = () => {
                       onClick={handleSaveGame}
                       disabled={saving}
                     >
-                      {saving ? 'Saving...' : 'Save Drawing'}
+                      {saving ? 'Đang lưu' : 'Lưu bản vẽ'}
                     </Button>
                     <Button
                       variant="outlined"
@@ -1299,7 +1299,7 @@ export const GameDetail = () => {
                       size="small"
                       onClick={() => setShowSavedDrawings(true)}
                     >
-                      My Drawings
+                      Bản vẽ của tôi
                     </Button>
                     <Button
                       variant="outlined"
@@ -1309,7 +1309,7 @@ export const GameDetail = () => {
                         freeDrawGame.handleClearBoard();
                       }}
                     >
-                      Clear Board
+                      Xóa bảng
                     </Button>
                   </Box>
                 </Box>

@@ -36,7 +36,7 @@ export const AdminContentArea = () => {
             sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}
           >
             <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
-              Dashboard Statistics
+              Thống kê bảng điều khiển
             </Typography>
             <Button
               variant="outlined"
@@ -44,11 +44,12 @@ export const AdminContentArea = () => {
               onClick={handleRefreshAll}
               size="small"
             >
-              Refresh All
+              Làm mới tất cả
             </Button>
           </Box>
           <Typography variant="body2" color="text.secondary">
-            Monitor platform activity, user engagement, and game popularity metrics.
+            Giám sát hoạt động của nền tảng, mức độ tương tác của người dùng và số liệu về mức độ
+            phổ biến của trò chơi.
           </Typography>
         </Box>
 

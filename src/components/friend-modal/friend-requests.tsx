@@ -102,11 +102,11 @@ export const FriendRequests = ({ onRequestUpdated, onRequestCountChange }: Frien
       {/* Received Requests */}
       <Box>
         <Typography variant="h6" sx={{ mb: 1 }}>
-          Received Requests ({receivedRequests.length})
+          Yêu cầu nhận ({receivedRequests.length})
         </Typography>
         {receivedRequests.length === 0 ? (
           <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-            No received friend requests
+            Không có yêu cầu nhận bạn bè
           </Typography>
         ) : (
           <List>
@@ -136,7 +136,7 @@ export const FriendRequests = ({ onRequestUpdated, onRequestCountChange }: Frien
                     disabled={processing === request.id}
                     size="small"
                   >
-                    {processing === request.id ? <CircularProgress size={16} /> : 'Accept'}
+                    {processing === request.id ? <CircularProgress size={16} /> : 'Chấp nhận'}
                   </Button>
                   <Button
                     variant="outlined"
@@ -146,7 +146,7 @@ export const FriendRequests = ({ onRequestUpdated, onRequestCountChange }: Frien
                     disabled={processing === request.id}
                     size="small"
                   >
-                    Reject
+                    Từ chối
                   </Button>
                 </Box>
               </ListItem>
@@ -160,11 +160,11 @@ export const FriendRequests = ({ onRequestUpdated, onRequestCountChange }: Frien
       {/* Sent Requests */}
       <Box>
         <Typography variant="h6" sx={{ mb: 1 }}>
-          Sent Requests ({sentRequests.length})
+          Yêu cầu gửi ({sentRequests.length})
         </Typography>
         {sentRequests.length === 0 ? (
           <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-            No sent friend requests
+            Không có yêu cầu gửi bạn bè
           </Typography>
         ) : (
           <List>
@@ -193,7 +193,7 @@ export const FriendRequests = ({ onRequestUpdated, onRequestCountChange }: Frien
                   disabled={processing === request.id}
                   size="small"
                 >
-                  {processing === request.id ? <CircularProgress size={16} /> : 'Cancel'}
+                  {processing === request.id ? <CircularProgress size={16} /> : 'Hủy'}
                 </Button>
               </ListItem>
             ))}

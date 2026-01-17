@@ -95,7 +95,7 @@ export const Profile = () => {
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
         {!isEditing && (
           <Button variant="contained" startIcon={<EditIcon />} onClick={() => setIsEditing(true)}>
-            Edit Profile
+            Sửa trang cá nhân
           </Button>
         )}
       </Box>

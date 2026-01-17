@@ -51,7 +51,7 @@ export const GameHotTable = ({ limit = 10 }: GameHotTableProps) => {
     <Paper sx={{ p: 2 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="h6" component="h3" sx={{ fontWeight: 600 }}>
-          Game Hot
+          Trò chơi phố biến
         </Typography>
         <IconButton size="small" onClick={fetchData} disabled={loading} aria-label="Refresh">
           <RefreshIcon />
@@ -68,7 +68,7 @@ export const GameHotTable = ({ limit = 10 }: GameHotTableProps) => {
         </Alert>
       ) : data.length === 0 ? (
         <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-          No game statistics available
+          Không có số liệu thống kê trò chơi có sẵn
         </Typography>
       ) : (
         <TableContainer
@@ -80,9 +80,9 @@ export const GameHotTable = ({ limit = 10 }: GameHotTableProps) => {
           <Table size="small" stickyHeader>
             <TableHead>
               <TableRow>
-                <TableCell>Rank</TableCell>
-                <TableCell>Game</TableCell>
-                <TableCell align="right">Plays</TableCell>
+                <TableCell>Xếp hạng</TableCell>
+                <TableCell>Trò chơi</TableCell>
+                <TableCell align="right">Lượt chơi</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>

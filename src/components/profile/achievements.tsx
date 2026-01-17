@@ -60,13 +60,13 @@ export const Achievements = () => {
   return (
     <Box>
       <Typography variant="h5" component="h2" sx={{ mb: 3, fontWeight: 600 }}>
-        Achievements
+        Thành tựu
       </Typography>
 
       {achievements.length === 0 && !loading ? (
         <Paper sx={{ p: 4, textAlign: 'center' }}>
           <Typography variant="body2" color="text.secondary">
-            No achievements available yet.
+            Chưa có thành tích nào.
           </Typography>
         </Paper>
       ) : (
@@ -75,7 +75,7 @@ export const Achievements = () => {
           {globalAchievements.length > 0 && (
             <Box sx={{ mb: 4 }}>
               <Typography variant="h6" component="h3" sx={{ mb: 2, fontWeight: 500 }}>
-                Global Achievements
+                Thành tựu toàn cầu
               </Typography>
               <Box
                 sx={{
@@ -99,7 +99,7 @@ export const Achievements = () => {
           {gameAchievements.length > 0 && (
             <Box sx={{ mb: 3 }}>
               <Typography variant="h6" component="h3" sx={{ mb: 2, fontWeight: 500 }}>
-                Game Achievements
+                Thành tựu trò chơi
               </Typography>
               <Box
                 sx={{
@@ -131,7 +131,7 @@ export const Achievements = () => {
                 showLastButton
               />
               <Typography variant="body2" color="text.secondary">
-                Showing {achievements.length} of {total} achievements
+                Hiển thị {achievements.length} trên {total} thành tích
               </Typography>
             </Stack>
           )}
