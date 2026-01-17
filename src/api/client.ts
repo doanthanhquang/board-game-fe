@@ -50,16 +50,6 @@ apiClient.interceptors.request.use(
  */
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
-    // Log responses in development mode
-    if (import.meta.env.DEV) {
-      console.log(
-        `[API Response] ${response.config.method?.toUpperCase()} ${response.config.url}`,
-        {
-          status: response.status,
-          data: response.data,
-        }
-      );
-    }
     return response;
   },
   (error: AxiosError) => {
