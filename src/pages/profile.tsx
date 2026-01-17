@@ -9,12 +9,16 @@ import {
   ProfileEditForm,
   Achievements,
 } from '@/components/profile';
+import { useAuth } from '@/context/use-auth';
+import { isAdmin } from '@/context/auth-context-types';
 
 export const Profile = () => {
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const { currentUser } = useAuth();
+  const userIsAdmin = isAdmin(currentUser);
 
   useEffect(() => {
     loadProfile();
@@ -106,10 +110,14 @@ export const Profile = () => {
         <>
           <ProfileHeader user={profileData.user} profile={profileData.profile} />
           <ProfileInfo user={profileData.user} profile={profileData.profile} />
-          {profileData.statistics && <GameStatistics statistics={profileData.statistics} />}
-          <Box sx={{ mt: 4 }}>
-            <Achievements />
-          </Box>
+          {!userIsAdmin && profileData.statistics && (
+            <GameStatistics statistics={profileData.statistics} />
+          )}
+          {!userIsAdmin && (
+            <Box sx={{ mt: 4 }}>
+              <Achievements />
+            </Box>
+          )}
         </>
       )}
     </Container>

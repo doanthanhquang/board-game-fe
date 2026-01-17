@@ -58,7 +58,7 @@ export interface UserStatistics {
 export interface ProfileData {
   user: ProfileUser;
   profile: ProfileInfo;
-  statistics: UserStatistics;
+  statistics?: UserStatistics; // Optional - not included for admin users
 }
 
 /**
