@@ -4,7 +4,7 @@ import {
   GameHotTable,
   NewAccountsTable,
   TopWinnersTable,
-  TopPointsTable,
+  // TopPointsTable,
 } from './statistics-tables';
 import { useState } from 'react';
 
@@ -62,7 +62,7 @@ export const AdminContentArea = () => {
           <GameHotTable key={`game-hot-${refreshKey}`} limit={10} />
           <NewAccountsTable key={`new-accounts-${refreshKey}`} limit={20} />
           <TopWinnersTable key={`top-winners-${refreshKey}`} limit={20} />
-          <TopPointsTable key={`top-points-${refreshKey}`} limit={20} />
+          {/* <TopPointsTable key={`top-points-${refreshKey}`} limit={20} /> */}
         </Box>
       </Container>
     </Box>
